@@ -125,7 +125,7 @@ app.get("/init", (request, response) => {
                                 )
                                 .then((res) => {
                                     console.log(res.data);
-                                    response.send(res.data["tokensAndMark"][5]);
+                                    response.send(res.data["tokensAndMark"].find(x => x.id === "ID1497673622"));
                                 });
                         });
                 });
