@@ -3,6 +3,7 @@ const axios = require("axios");
 const env = require("dotenv");
 env.config();
 const fs = require("fs");
+const cors = require("cors");
 const xml2js = require("xml2js");
 const xmlBeautifier = require("xml-beautifier");
 const passport = require("passport");
@@ -19,6 +20,12 @@ const app = express();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(
+    cors({
+        origin: "http://localhost:3001",
+    })
+);
 
 app.use(
     cookieSession({
@@ -41,6 +48,10 @@ app.use(express.static(__dirname + "/"));
 //Autenticación
 app.use(passport.initialize());
 app.use(passport.session());
+
+app.get("/ping", function (req, res) {
+    res.send("pong");
+});
 
 app.post(
     "/iniciarSesion",
