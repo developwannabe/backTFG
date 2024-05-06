@@ -38,12 +38,6 @@ function generateSessionId() {
 
 app.use(express.static(__dirname + "/"));
 
-app.get("/", function (request, response) {
-    response.statusCode = 200;
-    response.setHeader("Content-Type", "text/plain");
-    response.end("Hola Mundo!");
-});
-
 //Autenticación
 app.use(passport.initialize());
 app.use(passport.session());
