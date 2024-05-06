@@ -1,7 +1,6 @@
-require('dotenv').config();
+require("dotenv").config();
 var mongo = require("mongodb").MongoClient;
 class Cad {
-
     constructor() {
         this.usuarios = null;
         this.db = null;
@@ -11,38 +10,38 @@ class Cad {
         try {
             this.db = new BBDD();
             await this.db.conectar(callback);
-            console.log("Conexión a BBDD establecida correctamente.");
         } catch (error) {
             console.error("Fallo al conectar con BBDD:", error);
             callback(error);
         }
-    }
+    };
 
     insertarUsuario = function (datos, callback) {
         this.db.insertar("usuarios", datos, callback);
-    }
+    };
 
     buscarUsuario = function (datos, callback) {
         this.db.buscar("usuarios", datos, callback);
-    }
+    };
 }
 
 class BBDD {
-
     constructor() {
         this.db = null;
         this.colecciones = {};
     }
 
     conectar = async function (callback) {
-        let client = new mongo(
-            process.env.MONGO
-        );
-        await client.connect();
-        this.db = client.db("sistema");
-        this.colecciones["usuarios"] = this.db.collection("usuarios");
-        this.colecciones["rutas"] = this.db.collection("rutas");
-        callback();
+        try {
+            let client = new mongo(process.env.MONGO);
+            await client.connect();
+            this.db = client.db("sistema");
+            this.colecciones["usuarios"] = this.db.collection("usuarios");
+            this.colecciones["rutas"] = this.db.collection("rutas");
+            callback();
+        } catch (error) {
+            console.error("Fallo al conectar con BBDD:", error);
+        }
     };
 
     insertar = function (coleccion, elemento, callback) {
@@ -50,7 +49,7 @@ class BBDD {
             if (err) {
                 throw err;
             } else {
-                callback(null,result);
+                callback(null, result);
             }
         });
     };
@@ -60,7 +59,7 @@ class BBDD {
             if (err) {
                 throw err;
             } else {
-                callback(null,result);
+                callback(null, result);
             }
         });
     };
@@ -70,19 +69,23 @@ class BBDD {
             if (err) {
                 throw err;
             } else {
-                callback(null,result);
+                callback(null, result);
             }
         });
     };
 
     actualizar = function (coleccion, datos, callback) {
-        this.colecciones[coleccion].updateOne(datos[0], datos[1], function (err, result) {
-            if (err) {
-                throw err;
-            } else {
-                callback(null,result);
+        this.colecciones[coleccion].updateOne(
+            datos[0],
+            datos[1],
+            function (err, result) {
+                if (err) {
+                    throw err;
+                } else {
+                    callback(null, result);
+                }
             }
-        });
+        );
     };
 }
 

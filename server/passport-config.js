@@ -11,7 +11,7 @@ passport.serializeUser(function (user, done) {
 });
 
 passport.deserializeUser(function (email, done) {
-    done(null, { "email": email });
+    done(null, { email: email });
 });
 
 passport.use(
@@ -29,6 +29,18 @@ passport.use(
                     return done(user.error, false);
                 }
             );
+        }
+    )
+);
+
+passport.use(
+    new JwtStrategy(
+        {
+            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+            secretOrKey: process.env.JWTSECRET,
+        },
+        function (jwtPayload, done) {
+            return done(null, { nick: jwtPayload.email });
         }
     )
 );

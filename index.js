@@ -48,10 +48,10 @@ app.post(
     function (req, res, next) {
         passport.authenticate("local", function (err, user, info) {
             if (err) {
-                return res.send({ "error": err });
+                return res.send({ error: err });
             }
             if (!user) {
-                return res.send({ "error": err });
+                return res.send({ error: err });
             }
             req.logIn(user, function (err) {
                 if (err) {
@@ -64,7 +64,7 @@ app.post(
     function (req, res) {
         let email = req.user.email;
         let tkn = utils.crearToken(email, "acc");
-        res.send({"tkn": tkn, "email": email });
+        res.send({ tkn: tkn, email: email });
     }
 );
 
@@ -149,6 +149,14 @@ app.get("/init", (request, response) => {
         });
     });
 });
+
+app.get(
+    "/protegida",
+    passport.authenticate("jwt", { session: false }),
+    (req, res) => {
+        res.send("Ruta protegida");
+    }
+);
 
 //Inicio app
 app.listen(PORT, () => {

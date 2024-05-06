@@ -1,14 +1,13 @@
-const Datos =  require('./cad.js');
-const bcrypt = require('bcrypt');
+const Datos = require("./cad.js");
+const bcrypt = require("bcrypt");
 
 class Sistem {
-
     constructor() {
         this.test = false;
         this.cad = new Datos();
-        if(!this.test){
-            this.cad.conectar(function(){
-                console.log("Conectado a la base de datos");
+        if (!this.test) {
+            this.cad.conectar(function () {
+                console.log("Conexión a BBDD establecida correctamente.");
             });
         }
     }
@@ -30,14 +29,14 @@ class Sistem {
                     usr.password,
                     function (err, hash) {
                         if (hash) {
-                            callback({ "email": usr.email, "error": null});
+                            callback({ email: usr.email, error: null });
                         } else {
-                            callback({ "nick": null, "error": -4 });
+                            callback({ nick: null, error: -4 });
                         }
                     }
                 );
             } else {
-                callback({ "nick": null, "error": -3 });
+                callback({ nick: null, error: -3 });
             }
         });
     };
@@ -68,7 +67,7 @@ class Sistem {
                 callback(null, -3);
             }
         });
-    }
+    };
 }
 
 module.exports = Sistem;

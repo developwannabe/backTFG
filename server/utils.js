@@ -24,4 +24,4 @@ const comprobarDatos = function (req, res, next) {
 module.exports = {
     crearToken,
     comprobarDatos,
-}
+};
