@@ -5,6 +5,11 @@ const env = require("dotenv");
 const fs = require("fs");
 const xml2js = require("xml2js");
 const xmlBeautifier = require("xml-beautifier");
+const passport = require("passport");
+const LocalStrategy = require("passport-local").Strategy;
+const Sistem = require("./server/sistem.js");
+
+const sistema = new Sistem();
 
 env.config();
 
@@ -25,46 +30,39 @@ app.get("/", function (request, response) {
     response.end("Hola Mundo!");
 });
 
-app.listen(PORT, () => {
-    console.log(`App está escuchando en el puerto ${PORT}`);
-    console.log("Ctrl+C para salir");
-});
-
-app.get("/hola", function (request, response) {
-    const filePath = "./nets/cadiz.cpn";
-    fs.readFile(filePath, (err, data) => {
-        if (err) {
-            console.error("Error al leer el archivo:", err);
-            return;
+//Autenticación
+passport.use(
+    new LocalStrategy(
+        { usernameField: "email", passwordField: "password" },
+        function (username, password, done) {
+            sistema.iniciarSesion(
+                { email: username, password: password },
+                function (user) {
+                    return done(null, { nick: user.nick });
+                }
+            );
         }
-        xml2js.parseString(data, (err, result) => {
+    )
+);
+
+app.post("/iniciarSesion", function (request, response) {
+    passport.authenticate("local", function (err, user, info) {
+        if (err) {
+            return next(err);
+        }
+        if (!user) {
+            return response.redirect("/login");
+        }
+        request.logIn(user, function (err) {
             if (err) {
-                console.error("Error al parsear el XML:", err);
-                return;
+                return next(err);
             }
-            const builder = new xml2js.Builder({
-                headless: true,
-                renderOpts: { pretty: true, indent: " ", newline: "\n" },
-            });
-            let cpnXml = builder.buildObject(result);
-            cpnXml = xmlBeautifier(cpnXml);
-            let body = {
-                complex_verify: true,
-                need_sim_restart: true,
-                xml: cpnXml,
-            };
-            let config = {
-                headers: { "X-SessionId": generateSessionId() },
-            };
-            axios
-                .post(simulatorHost + "/api/v2/cpn/init", body, config)
-                .then((res) => {
-                    response.send(res.data);
-                });
+            return response.redirect("/users/" + user.username);
         });
-    });
+    })(request, response);
 });
 
+//Simulación
 app.get("/init", (request, response) => {
     const filePath = "./nets/cadiz.cpn";
     fs.readFile(filePath, (err, data) => {
@@ -125,10 +123,19 @@ app.get("/init", (request, response) => {
                                 )
                                 .then((res) => {
                                     console.log(res.data);
-                                    response.send(res.data["tokensAndMark"].find(x => x.id === "ID1497673622"));
+                                    response.send(
+                                        res.data["tokensAndMark"].find(
+                                            (x) => x.id === "ID1497673622"
+                                        )
+                                    );
                                 });
                         });
                 });
         });
     });
+});
+//Inicio app
+app.listen(PORT, () => {
+    console.log(`App está escuchando en el puerto ${PORT}`);
+    console.log("Ctrl+C para salir");
 });
