@@ -1,15 +1,37 @@
 const express = require("express");
-const app = express();
 const axios = require("axios");
 const env = require("dotenv");
 const fs = require("fs");
 const xml2js = require("xml2js");
 const xmlBeautifier = require("xml-beautifier");
 const passport = require("passport");
-const LocalStrategy = require("passport-local").Strategy;
 const Sistem = require("./server/sistem.js");
+const bodyParser = require("body-parser");
+const cookieSession = require("cookie-session");
+const jwt = require("jsonwebtoken");
 
 const sistema = new Sistem();
+module.exports.sistema = sistema;
+
+require("./server/passport-config.js");
+const app = express();
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(
+    cookieSession({
+        name: "Serv",
+        keys: ["key1", "key2"],
+    })
+);
+
+const crearToken = function (email, of) {
+    const token = jwt.sign({ email: email, of: of }, process.env.JWTSECRET, {
+        expiresIn: "1h",
+    });
+    return token;
+};
 
 env.config();
 
@@ -25,41 +47,68 @@ function generateSessionId() {
 app.use(express.static(__dirname + "/"));
 
 app.get("/", function (request, response) {
+    console.log(request.session);
     response.statusCode = 200;
     response.setHeader("Content-Type", "text/plain");
     response.end("Hola Mundo!");
 });
 
 //Autenticación
-passport.use(
-    new LocalStrategy(
-        { usernameField: "email", passwordField: "password" },
-        function (username, password, done) {
-            sistema.iniciarSesion(
-                { email: username, password: password },
-                function (user) {
-                    return done(null, { nick: user.nick });
-                }
-            );
-        }
-    )
-);
+app.use(passport.initialize());
+app.use(passport.session());
 
-app.post("/iniciarSesion", function (request, response) {
-    passport.authenticate("local", function (err, user, info) {
-        if (err) {
-            return next(err);
+const comprobarDatos = function (req, res, next) {
+    if (req.body.email && req.body.password) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(req.body.email)) {
+            res.send({ error: -1 });
+            return;
         }
-        if (!user) {
-            return response.redirect("/login");
-        }
-        request.logIn(user, function (err) {
+        next();
+    } else {
+        res.send({ error: -2 });
+    }
+};
+
+app.post(
+    "/iniciarSesion",
+    comprobarDatos,
+    function (req, res, next) {
+        passport.authenticate("local", function (err, user, info) {
             if (err) {
                 return next(err);
             }
-            return response.redirect("/users/" + user.username);
-        });
-    })(request, response);
+            if (!user) {
+                return res.send({ error: "Authentication failed" });
+            }
+            req.logIn(user, function (err) {
+                if (err) {
+                    return next(err);
+                }
+                return next();
+            });
+        })(req, res, next);
+    },
+    function (req, res) {
+        let nick = req.user.nick;
+        let tkn = null;
+        let error = null;
+        if (nick != -1 && nick != -2) {
+            tkn = crearToken(nick, "acc");
+        } else {
+            error = nick;
+        }
+        res.send({ error: error, tkn: tkn, nick: nick });
+    }
+);
+
+app.post("/registrarUsuario", comprobarDatos, function (req, res) {
+    sistema.registrarUsuario(
+        { email: req.body.email, password: req.body.password },
+        function (nick, error) {
+            res.send({ email: nick, error: error });
+        }
+    );
 });
 
 //Simulación
