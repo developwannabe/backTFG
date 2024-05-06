@@ -1,0 +1,13 @@
+Registro e Inicio:
+
+1 RegEx email
+2 Falta contraseña o email
+
+Registro:
+
+3 Usuario ya existe
+
+Inicio de sesión
+
+3 Usuario no encontrado
+4 Contraseña errónea

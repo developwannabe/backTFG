@@ -19,20 +19,7 @@ class Cad {
     }
 
     insertarUsuario = function (datos, callback) {
-        let bd = this.db;
-        this.buscarUsuario({ email: datos.email }, function(err, result) {
-            if (err) {
-                console.error("Error al buscar usuario:", err);
-                callback(err);
-            } else {
-                if (result.length > 0) {
-                    console.log("El usuario ya existe");
-                    callback(-1, result);
-                } else {
-                    bd.insertar("usuarios", datos, callback);
-                }
-            }
-        });
+        this.db.insertar("usuarios", datos, callback);
     }
 
     buscarUsuario = function (datos, callback) {
@@ -61,9 +48,8 @@ class BBDD {
     insertar = function (coleccion, elemento, callback) {
         this.colecciones[coleccion].insertOne(elemento, function (err, result) {
             if (err) {
-                console.log(-1, null);
+                throw err;
             } else {
-                console.log("Nuevo elemento creado");
                 callback(null,result);
             }
         });
@@ -71,19 +57,31 @@ class BBDD {
 
     buscar = function (coleccion, datos, callback) {
         this.colecciones[coleccion].find(datos).toArray(function (err, result) {
-            callback(err, result);
+            if (err) {
+                throw err;
+            } else {
+                callback(null,result);
+            }
         });
     };
 
     eliminar = function (coleccion, datos, callback) {
         this.colecciones[coleccion].deleteOne(datos, function (err, result) {
-            callback(err, result);
+            if (err) {
+                throw err;
+            } else {
+                callback(null,result);
+            }
         });
     };
 
     actualizar = function (coleccion, datos, callback) {
         this.colecciones[coleccion].updateOne(datos[0], datos[1], function (err, result) {
-            callback(err, result);
+            if (err) {
+                throw err;
+            } else {
+                callback(null,result);
+            }
         });
     };
 }

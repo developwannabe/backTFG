@@ -1,6 +1,7 @@
 const express = require("express");
 const axios = require("axios");
 const env = require("dotenv");
+env.config();
 const fs = require("fs");
 const xml2js = require("xml2js");
 const xmlBeautifier = require("xml-beautifier");
@@ -8,7 +9,7 @@ const passport = require("passport");
 const Sistem = require("./server/sistem.js");
 const bodyParser = require("body-parser");
 const cookieSession = require("cookie-session");
-const jwt = require("jsonwebtoken");
+const utils = require("./server/utils.js");
 
 const sistema = new Sistem();
 module.exports.sistema = sistema;
@@ -26,15 +27,6 @@ app.use(
     })
 );
 
-const crearToken = function (email, of) {
-    const token = jwt.sign({ email: email, of: of }, process.env.JWTSECRET, {
-        expiresIn: "1h",
-    });
-    return token;
-};
-
-env.config();
-
 const PORT = process.env.PORT || 3000;
 
 const simulatorHost = process.env.SIMULATOR_HOST;
@@ -47,7 +39,6 @@ function generateSessionId() {
 app.use(express.static(__dirname + "/"));
 
 app.get("/", function (request, response) {
-    console.log(request.session);
     response.statusCode = 200;
     response.setHeader("Content-Type", "text/plain");
     response.end("Hola Mundo!");
@@ -57,29 +48,16 @@ app.get("/", function (request, response) {
 app.use(passport.initialize());
 app.use(passport.session());
 
-const comprobarDatos = function (req, res, next) {
-    if (req.body.email && req.body.password) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(req.body.email)) {
-            res.send({ error: -1 });
-            return;
-        }
-        next();
-    } else {
-        res.send({ error: -2 });
-    }
-};
-
 app.post(
     "/iniciarSesion",
-    comprobarDatos,
+    utils.comprobarDatos,
     function (req, res, next) {
         passport.authenticate("local", function (err, user, info) {
             if (err) {
-                return next(err);
+                return res.send({ "error": err });
             }
             if (!user) {
-                return res.send({ error: "Authentication failed" });
+                return res.send({ "error": err });
             }
             req.logIn(user, function (err) {
                 if (err) {
@@ -90,19 +68,13 @@ app.post(
         })(req, res, next);
     },
     function (req, res) {
-        let nick = req.user.nick;
-        let tkn = null;
-        let error = null;
-        if (nick != -1 && nick != -2) {
-            tkn = crearToken(nick, "acc");
-        } else {
-            error = nick;
-        }
-        res.send({ error: error, tkn: tkn, nick: nick });
+        let email = req.user.email;
+        let tkn = utils.crearToken(email, "acc");
+        res.send({"tkn": tkn, "email": email });
     }
 );
 
-app.post("/registrarUsuario", comprobarDatos, function (req, res) {
+app.post("/registrarUsuario", utils.comprobarDatos, function (req, res) {
     sistema.registrarUsuario(
         { email: req.body.email, password: req.body.password },
         function (nick, error) {
@@ -183,8 +155,8 @@ app.get("/init", (request, response) => {
         });
     });
 });
+
 //Inicio app
 app.listen(PORT, () => {
     console.log(`App está escuchando en el puerto ${PORT}`);
-    console.log("Ctrl+C para salir");
 });

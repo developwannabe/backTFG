@@ -20,7 +20,7 @@ class Sistem {
     iniciarSesion = function (obj, callback) {
         this.cad.buscarUsuario({ email: obj.email }, function (error, result) {
             if (error) {
-                callback({ "nick": null, "error": error });
+                callback(null);
                 return;
             }
             let usr = result[0];
@@ -30,24 +30,42 @@ class Sistem {
                     usr.password,
                     function (err, hash) {
                         if (hash) {
-                            callback({ "nick": usr.nick,  "error": null});
+                            callback({ "email": usr.email, "error": null});
                         } else {
-                            callback({ "nick": null, "error": -2 });
+                            callback({ "nick": null, "error": -4 });
                         }
                     }
                 );
             } else {
-                callback({ "nick": null, "error": -1 });
+                callback({ "nick": null, "error": -3 });
             }
         });
     };
 
     registrarUsuario = function (datos, callback) {
-        this.cad.insertarUsuario(datos, function (error,result){
-            if(error){
+        let cadT = this.cad;
+        cadT.buscarUsuario({ email: datos.email }, function (error, result) {
+            if (error) {
                 callback(null, error);
-            }else{
-                callback(datos.email, null);
+                return;
+            }
+            if (result.length == 0) {
+                bcrypt.hash(datos.password, 10, function (err, hash) {
+                    if (err) {
+                        callback(null, err);
+                        return;
+                    }
+                    datos.password = hash;
+                    cadT.insertarUsuario(datos, function (error, result) {
+                        if (error) {
+                            callback(null, error);
+                            return;
+                        }
+                        callback(datos.email, null);
+                    });
+                });
+            } else {
+                callback(null, -3);
             }
         });
     }
