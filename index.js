@@ -17,6 +17,8 @@ module.exports.sistema = sistema;
 
 require("./server/passport-config.js");
 const app = express();
+const numSteps = 50000;
+const numTokens = 200;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -88,6 +90,11 @@ app.post("/registrarUsuario", utils.comprobarDatos, utils.rolAdmin, function (re
     );
 });
 
+app.post("/cerrarSesion", function (req, res) {
+    req.logout();
+    res.send({ error: null });
+});
+
 //Simulación
 app.post("/simular", (request, response) => {
     const filePath = "./nets/cadiz.cpn";
@@ -142,7 +149,7 @@ app.post("/simular", (request, response) => {
                         .find((x) => x.$.id === "ID1494615515")
                         .ml.forEach((item) => {
                             if (item._.includes('val I111 =0`(6,2,[(11,"o")],0) ;')) {
-                                item._ = item._.replace('val I111 =0`(6,2,[(11,"o")],0) ;', 'val I111 =100`('+request.body.destino+','+request.body.tipoVehiculo+',[(11,"o")],0) ;');
+                                item._ = item._.replace('val I111 =0`(6,2,[(11,"o")],0) ;', 'val I111 ='+numTokens+'`('+request.body.destino+','+request.body.tipoVehiculo+',[(11,"o")],0) ;');
                             }
                         });
                 }else if(request.body.origen == 12){
@@ -150,7 +157,7 @@ app.post("/simular", (request, response) => {
                         .find((x) => x.$.id === "ID1494615515")
                         .ml.forEach((item) => {
                             if (item._.includes('val I127=0`(6,2,[(12,"o")],0) ;')) {
-                                item._ = item._.replace('val I127=0`(6,2,[(12,"o")],0) ;', 'val I111 =100`('+request.body.destino+','+request.body.tipoVehiculo+',[(12,"o")],0) ;');
+                                item._ = item._.replace('val I127=0`(6,2,[(12,"o")],0) ;', 'val I111 ='+numTokens+'`('+request.body.destino+','+request.body.tipoVehiculo+',[(12,"o")],0) ;');
                             }
                         });
                 }
@@ -186,11 +193,11 @@ app.post("/simular", (request, response) => {
                             )
                             .then((res) => {
                                 body = {
-                                    addStep: 50000,
+                                    addStep: numSteps,
                                     untilStep: 0,
                                     untilTime: 0,
                                     addTime: 0,
-                                    amount: 50000,
+                                    amount: numSteps,
                                 };
                                 axios
                                     .post(
@@ -200,6 +207,7 @@ app.post("/simular", (request, response) => {
                                         config
                                     )
                                     .then((res) => {
+                                        console.log(res.data["tokensAndMark"]);
                                         response.send(
                                             res.data["tokensAndMark"].find(
                                                 (x) => x.id === "ID1497673622"
