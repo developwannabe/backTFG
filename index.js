@@ -74,14 +74,14 @@ app.post(
     },
     function (req, res) {
         let email = req.user.email;
-        let tkn = utils.crearToken(email, "acc");
-        res.send({ tkn: tkn, email: email });
+        let tkn = utils.crearToken(email, req.user.rol);
+        res.send({ "tkn": tkn, "email": email , "rol":req.user.rol});
     }
 );
 
-app.post("/registrarUsuario", utils.comprobarDatos, function (req, res) {
+app.post("/registrarUsuario", utils.comprobarDatos, utils.rolAdmin, function (req, res) {
     sistema.registrarUsuario(
-        { email: req.body.email, password: req.body.password },
+        { email: req.body.email, password: req.body.password, rol: req.body.rol },
         function (nick, error) {
             res.send({ email: nick, error: error });
         }

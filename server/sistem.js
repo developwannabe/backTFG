@@ -29,7 +29,7 @@ class Sistem {
                     usr.password,
                     function (err, hash) {
                         if (hash) {
-                            callback({ email: usr.email, error: null });
+                            callback({ email: usr.email, rol: usr.rol ,error: null });
                         } else {
                             callback({ nick: null, error: -4 });
                         }
