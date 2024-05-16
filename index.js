@@ -89,7 +89,7 @@ app.post("/registrarUsuario", utils.comprobarDatos, function (req, res) {
 });
 
 //Simulación
-app.post("/simular", (request, response) => {
+app.get("/simular", (request, response) => {
     const filePath = "./nets/cadiz.cpn";
     const tupla = "(A,B,C,D)";
     fs.readFile(filePath, (err, data) => {
@@ -98,82 +98,90 @@ app.post("/simular", (request, response) => {
             return;
         }
         xml2js.parseString(data, (err, result) => {
+            let newJson = result;
             if (err) {
                 console.error("Error al parsear el XML:", err);
                 return;
             }
             let tup;
-            for (let i = 0; i < request.body.datos.length; i++) {
-                transicion = request.body.datos[i];
-                tup = tupla
-                    .replaceAll("A", i)
-                    .replaceAll("B", transicion.flood)
-                    .replaceAll("C", transicion.objects)
-                    .replaceAll("D", transicion.alert);
-                result.workspaceElements.cpnet[0].globbox[0].block
-                    .find((x) => x.$.id === "ID1494615515")
-                    .ml.forEach((item) => {
-                        if (item._.includes(transicion.transicion + "S")) {
-                            item._ = item._.replace(
-                                transicion.transicion + "S",
-                                tup
-                            );
-                        }
-                    });
-            }
-            const builder = new xml2js.Builder({
-                headless: true,
-                renderOpts: { pretty: true, indent: " ", newline: "\n" },
-            });
-            let cpnXml = builder.buildObject(result);
-            cpnXml = xmlBeautifier(cpnXml);
-            let body = {
-                complex_verify: true,
-                need_sim_restart: true,
-                xml: cpnXml,
-            };
-            let config = {
-                headers: { "X-SessionId": generateSessionId() },
-            };
-            axios
-                .post(simulatorHost + "/api/v2/cpn/init", body, config)
-                .then((res) => {
-                    body = {
-                        options: {
-                            fair_be: "false",
-                            global_fairness: "false",
-                        },
-                    };
-                    axios
-                        .post(
-                            simulatorHost + "/api/v2/cpn/sim/init",
-                            body,
-                            config
-                        )
-                        .then((res) => {
-                            body = {
-                                addStep: 50000,
-                                untilStep: 0,
-                                untilTime: 0,
-                                addTime: 0,
-                                amount: 50000,
-                            };
-                            axios
-                                .post(
-                                    simulatorHost +
-                                        "/api/v2/cpn/sim/step_fast_forward",
-                                    body,
-                                    config
-                                )
-                                .then((res) => {
-                                    response.send(
-                                        res.data["tokensAndMark"].find(
-                                            (x) => x.id === "ID1497673622"
-                                        )
-                                    );
-                                });
+            sistema.ultimaEvaluacion(function(err, eval){
+                if(err){
+                    console.error("Error al buscar la última evaluación:", err);
+                    return;
+                }
+                for (let i = 0; i < eval.evaluacion.length; i++) {
+                    transicion = eval.evaluacion[i];
+                    tup = tupla
+                        .replaceAll("A", i)
+                        .replaceAll("B", transicion.flood)
+                        .replaceAll("C", transicion.objects)
+                        .replaceAll("D", transicion.alert);
+                    newJson.workspaceElements.cpnet[0].globbox[0].block
+                        .find((x) => x.$.id === "ID1494615515")
+                        .ml.forEach((item) => {
+                            if (item._.includes(transicion.transicion + "S")) {
+                                item._ = item._.replace(
+                                    transicion.transicion + "S",
+                                    tup
+                                );
+                            }
                         });
+                }
+                const builder = new xml2js.Builder({
+                    headless: true,
+                    renderOpts: { pretty: true, indent: " ", newline: "\n" },
                 });
+                let cpnXml = builder.buildObject(newJson);
+                cpnXml = xmlBeautifier(cpnXml);
+                let body = {
+                    complex_verify: true,
+                    need_sim_restart: true,
+                    xml: cpnXml,
+                };
+                let config = {
+                    headers: { "X-SessionId": generateSessionId() },
+                };
+                axios
+                    .post(simulatorHost + "/api/v2/cpn/init", body, config)
+                    .then((res) => {
+                        body = {
+                            options: {
+                                fair_be: "false",
+                                global_fairness: "false",
+                            },
+                        };
+                        axios
+                            .post(
+                                simulatorHost + "/api/v2/cpn/sim/init",
+                                body,
+                                config
+                            )
+                            .then((res) => {
+                                body = {
+                                    addStep: 50000,
+                                    untilStep: 0,
+                                    untilTime: 0,
+                                    addTime: 0,
+                                    amount: 50000,
+                                };
+                                axios
+                                    .post(
+                                        simulatorHost +
+                                            "/api/v2/cpn/sim/step_fast_forward",
+                                        body,
+                                        config
+                                    )
+                                    .then((res) => {
+                                        response.send(
+                                            res.data["tokensAndMark"].find(
+                                                (x) => x.id === "ID1497673622"
+                                            )
+                                        );
+                                    });
+                            });
+                    });
+            })
+            
         });
     });
 });
@@ -181,21 +189,8 @@ app.post("/simular", (request, response) => {
 app.post(
     "/guardarEvaluacion",
     (req, res) => {
-        let eval = {
-            "time": new Date().getTime(),
-            evaluación: req.body.datos
-        }
-        sistema.guardarEvaluacion(eval, function (error, result) {
-            res.send({ error: error, result: result });
-        });
-    }
-)
-
-app.get(
-    "/ultimaEvaluacion",
-    (req, res) => {
-        sistema.ultimaEvaluacion(function (error, result) {
-            res.send({ error: error, result: result });
+        sistema.guardarEvaluacion(req.body.datos, function (error, result) {
+            res.send({ error: error});
         });
     }
 )

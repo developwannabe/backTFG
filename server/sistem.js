@@ -70,12 +70,16 @@ class Sistem {
     };
 
     guardarEvaluacion = function(evaluacion, callback){
-        this.cad.insertarEvaluacion(evaluacion, function(error, result){
+        let evalG = {
+            "time": new Date().getTime(),
+            "evaluacion": evaluacion
+        }
+        this.cad.insertarEvaluacion(evalG, function(error, result){
             if(error){
-                callback(null, error);
+                callback(error, null);
                 return;
             }
-            callback(result, null);
+            callback(null, result);
         });
     }
 
