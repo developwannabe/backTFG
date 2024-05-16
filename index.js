@@ -110,7 +110,6 @@ app.post("/simular", (request, response) => {
                     .replaceAll("B", transicion.flood)
                     .replaceAll("C", transicion.objects)
                     .replaceAll("D", transicion.alert);
-                console.log(tup);
                 result.workspaceElements.cpnet[0].globbox[0].block
                     .find((x) => x.$.id === "ID1494615515")
                     .ml.forEach((item) => {
@@ -139,7 +138,6 @@ app.post("/simular", (request, response) => {
             axios
                 .post(simulatorHost + "/api/v2/cpn/init", body, config)
                 .then((res) => {
-                    console.log(res.data);
                     body = {
                         options: {
                             fair_be: "false",
@@ -153,13 +151,12 @@ app.post("/simular", (request, response) => {
                             config
                         )
                         .then((res) => {
-                            console.log(res.data);
                             body = {
                                 addStep: 50000,
                                 untilStep: 0,
                                 untilTime: 0,
                                 addTime: 0,
-                                amount: 5000,
+                                amount: 50000,
                             };
                             axios
                                 .post(
@@ -169,7 +166,6 @@ app.post("/simular", (request, response) => {
                                     config
                                 )
                                 .then((res) => {
-                                    console.log(res.data);
                                     response.send(
                                         res.data["tokensAndMark"].find(
                                             (x) => x.id === "ID1497673622"
@@ -181,6 +177,28 @@ app.post("/simular", (request, response) => {
         });
     });
 });
+
+app.post(
+    "/guardarEvaluacion",
+    (req, res) => {
+        let eval = {
+            "time": new Date().getTime(),
+            evaluación: req.body.datos
+        }
+        sistema.guardarEvaluacion(eval, function (error, result) {
+            res.send({ error: error, result: result });
+        });
+    }
+)
+
+app.get(
+    "/ultimaEvaluacion",
+    (req, res) => {
+        sistema.ultimaEvaluacion(function (error, result) {
+            res.send({ error: error, result: result });
+        });
+    }
+)
 
 app.get(
     "/protegida",

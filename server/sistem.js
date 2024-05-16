@@ -68,6 +68,26 @@ class Sistem {
             }
         });
     };
+
+    guardarEvaluacion = function(evaluacion, callback){
+        this.cad.insertarEvaluacion(evaluacion, function(error, result){
+            if(error){
+                callback(null, error);
+                return;
+            }
+            callback(result, null);
+        });
+    }
+
+    ultimaEvaluacion = function(callback){
+        this.cad.ultimaEvaluacion(function(error, result){
+            if(error){
+                callback(error, null);
+                return;
+            }
+            callback(null, result);
+        });
+    }
 }
 
 module.exports = Sistem;

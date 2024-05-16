@@ -23,6 +23,14 @@ class Cad {
     buscarUsuario = function (datos, callback) {
         this.db.buscar("usuarios", datos, callback);
     };
+
+    insertarEvaluacion = function (datos, callback) {
+        this.db.insertar("evaluaciones", datos, callback);
+    }
+
+    ultimaEvaluacion = function (callback) {
+        this.db.buscarUno("evaluaciones", {}, { sort: { "time" : -1 } }, callback);
+    }
 }
 
 class BBDD {
@@ -37,7 +45,7 @@ class BBDD {
             await client.connect();
             this.db = client.db("sistema");
             this.colecciones["usuarios"] = this.db.collection("usuarios");
-            this.colecciones["rutas"] = this.db.collection("rutas");
+            this.colecciones["evaluaciones"] = this.db.collection("evaluaciones");
             callback();
         } catch (error) {
             console.error("Fallo al conectar con BBDD:", error);
@@ -56,6 +64,16 @@ class BBDD {
 
     buscar = function (coleccion, datos, callback) {
         this.colecciones[coleccion].find(datos).toArray(function (err, result) {
+            if (err) {
+                throw err;
+            } else {
+                callback(null, result);
+            }
+        });
+    };
+
+    buscarUno = function (coleccion, datos, opciones, callback) {
+        this.colecciones[coleccion].findOne(datos, opciones, function (err, result) {
             if (err) {
                 throw err;
             } else {
