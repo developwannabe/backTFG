@@ -70,6 +70,9 @@ class Sistem {
     };
 
     guardarEvaluacion = function(evaluacion, callback){
+        for(let i = 0; i < evaluacion.length; i++){
+            evaluacion[i].time = Math.floor(Math.random() * 10) + 1;
+        }
         let evalG = {
             "time": new Date().getTime(),
             "evaluacion": evaluacion

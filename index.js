@@ -91,7 +91,6 @@ app.post("/registrarUsuario", utils.comprobarDatos, function (req, res) {
 //Simulación
 app.post("/simular", (request, response) => {
     const filePath = "./nets/cadiz.cpn";
-    const tupla = "(A,B,C,D)";
     if(request.body == null){
         response.send({error: "No se han enviado datos"});
         return;
@@ -112,6 +111,7 @@ app.post("/simular", (request, response) => {
                 console.error("Error al parsear el XML:", err);
                 return;
             }
+            const tupla = "(A,B,C,D)";
             let tup;
             sistema.ultimaEvaluacion(function(err, eval){
                 if(err){
@@ -121,10 +121,10 @@ app.post("/simular", (request, response) => {
                 for (let i = 0; i < eval.evaluacion.length; i++) {
                     transicion = eval.evaluacion[i];
                     tup = tupla
-                        .replaceAll("A", i)
-                        .replaceAll("B", transicion.flood)
-                        .replaceAll("C", transicion.objects)
-                        .replaceAll("D", transicion.alert);
+                        .replaceAll("A", transicion.flood)
+                        .replaceAll("B", transicion.objects)
+                        .replaceAll("C", transicion.alert)
+                        .replaceAll("D", transicion.time);
                     newJson.workspaceElements.cpnet[0].globbox[0].block
                         .find((x) => x.$.id === "ID1494615515")
                         .ml.forEach((item) => {
@@ -159,6 +159,7 @@ app.post("/simular", (request, response) => {
                 });
                 let cpnXml = builder.buildObject(newJson);
                 cpnXml = xmlBeautifier(cpnXml);
+                fs.writeFileSync("./nets/xd.cpn", cpnXml);
                 let body = {
                     complex_verify: true,
                     need_sim_restart: true,
