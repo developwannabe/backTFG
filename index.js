@@ -125,7 +125,7 @@ app.post("/simular", (request, response) => {
                         .replaceAll("B", transicion.objects)
                         .replaceAll("C", transicion.alert)
                         .replaceAll("D", transicion.time)
-                        .replaceAll("E", 1);
+                        .replaceAll("E", transicion.state);
                     newJson.workspaceElements.cpnet[0].globbox[0].block
                         .find((x) => x.$.id === "ID1494615515")
                         .ml.forEach((item) => {
