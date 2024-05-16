@@ -89,8 +89,9 @@ app.post("/registrarUsuario", utils.comprobarDatos, function (req, res) {
 });
 
 //Simulación
-app.get("/init", (request, response) => {
+app.post("/simular", (request, response) => {
     const filePath = "./nets/cadiz.cpn";
+    const tupla = "(A,B,C,D)";
     fs.readFile(filePath, (err, data) => {
         if (err) {
             console.error("Error al leer el archivo:", err);
@@ -100,6 +101,26 @@ app.get("/init", (request, response) => {
             if (err) {
                 console.error("Error al parsear el XML:", err);
                 return;
+            }
+            let tup;
+            for (let i = 0; i < request.body.datos.length; i++) {
+                transicion = request.body.datos[i];
+                tup = tupla
+                    .replaceAll("A", i)
+                    .replaceAll("B", transicion.flood)
+                    .replaceAll("C", transicion.objects)
+                    .replaceAll("D", transicion.alert);
+                console.log(tup);
+                result.workspaceElements.cpnet[0].globbox[0].block
+                    .find((x) => x.$.id === "ID1494615515")
+                    .ml.forEach((item) => {
+                        if (item._.includes(transicion.transicion + "S")) {
+                            item._ = item._.replace(
+                                transicion.transicion + "S",
+                                tup
+                            );
+                        }
+                    });
             }
             const builder = new xml2js.Builder({
                 headless: true,
@@ -134,7 +155,7 @@ app.get("/init", (request, response) => {
                         .then((res) => {
                             console.log(res.data);
                             body = {
-                                addStep: 5000,
+                                addStep: 50000,
                                 untilStep: 0,
                                 untilTime: 0,
                                 addTime: 0,
