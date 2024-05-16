@@ -311,10 +311,8 @@ if (#4y &lt; #4z) then 1`y else 1`z</layout>
                           else if (x=1) then (discrete(0,50),discrete(0,2),discrete(0,2),discrete(1,10))
                           else (1,1,1,5);</layout>
         </ml>
-        <ml id="ID1496181110">val I127=100`(6,2,[(12,&quot;o&quot;)],0) ;</ml>
-        <ml id="ID1498006884">val I127r=100`(6,2,[(12,&quot;o&quot;)],0) ;
-          <layout>val I127r=100`(6,2,[(12,&quot;o&quot;)],0) ;</layout>
-        </ml>
+        <ml id="ID1496181110">val I127=0`(6,2,[(12,&quot;o&quot;)],0) ;</ml>
+        <ml id="ID1505167966">val I111 =0`(6,2,[(11,&quot;o&quot;)],0) ;</ml>
         <ml id="ID1505157697">val info4A1A2 = 1`info4A1A2S;</ml>
         <ml id="ID1505157754">val info4A1A3 = 1`info4A1A3S;</ml>
         <ml id="ID1505157969">val info4A1A4 = 1`info4A1A4S;</ml>
@@ -1105,7 +1103,7 @@ if (#4y &lt; #4z) then 1`y else 1`z</layout>
                 version="4.0.1">ZoB</text>
         </type>
         <initmark id="ID1503263676">
-          <posattr x="-1119.000000"
+          <posattr x="-1136.500000"
                    y="845.000000"/>
           <fillattr colour="White"
                     pattern="Solid"
@@ -1116,7 +1114,7 @@ if (#4y &lt; #4z) then 1`y else 1`z</layout>
           <textattr colour="Blue"
                     bold="false"/>
           <text tool="CPN Tools"
-                version="4.0.1"/>
+                version="4.0.1">I111</text>
         </initmark>
         <fusioninfo id="ID1503301954"
                     name="A11">
@@ -4609,7 +4607,7 @@ if (#4y &lt; #4z) then 1`y else 1`z</layout>
                 version="4.0.1">ZoB</text>
         </type>
         <initmark id="ID1503239320">
-          <posattr x="-1558.000000"
+          <posattr x="-1575.500000"
                    y="600.000000"/>
           <fillattr colour="White"
                     pattern="Solid"
@@ -4620,7 +4618,7 @@ if (#4y &lt; #4z) then 1`y else 1`z</layout>
           <textattr colour="Blue"
                     bold="false"/>
           <text tool="CPN Tools"
-                version="4.0.1"/>
+                version="4.0.1">I111</text>
         </initmark>
         <fusioninfo id="ID1503300447"
                     name="A11">

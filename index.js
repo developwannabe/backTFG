@@ -89,9 +89,18 @@ app.post("/registrarUsuario", utils.comprobarDatos, function (req, res) {
 });
 
 //Simulación
-app.get("/simular", (request, response) => {
+app.post("/simular", (request, response) => {
     const filePath = "./nets/cadiz.cpn";
     const tupla = "(A,B,C,D)";
+    if(request.body == null){
+        response.send({error: "No se han enviado datos"});
+        return;
+    }
+    if(request.body.origen != 11 && request.body.origen != 12){
+        response.send({error: "No se ha enviado la petición correcta"});
+        return;
+    }
+
     fs.readFile(filePath, (err, data) => {
         if (err) {
             console.error("Error al leer el archivo:", err);
@@ -124,6 +133,23 @@ app.get("/simular", (request, response) => {
                                     transicion.transicion + "S",
                                     tup
                                 );
+                            }
+                        });
+                }
+                if(request.body.origen == 11){
+                    newJson.workspaceElements.cpnet[0].globbox[0].block
+                        .find((x) => x.$.id === "ID1494615515")
+                        .ml.forEach((item) => {
+                            if (item._.includes('val I111 =0`(6,2,[(11,"o")],0) ;')) {
+                                item._ = item._.replace('val I111 =0`(6,2,[(11,"o")],0) ;', 'val I111 =100`('+request.body.destino+','+request.body.tipoVehiculo+',[(11,"o")],0) ;');
+                            }
+                        });
+                }else if(request.body.origen == 12){
+                    newJson.workspaceElements.cpnet[0].globbox[0].block
+                        .find((x) => x.$.id === "ID1494615515")
+                        .ml.forEach((item) => {
+                            if (item._.includes('val I127=0`(6,2,[(12,"o")],0) ;')) {
+                                item._ = item._.replace('val I127=0`(6,2,[(12,"o")],0) ;', 'val I111 =100`('+request.body.destino+','+request.body.tipoVehiculo+',[(12,"o")],0) ;');
                             }
                         });
                 }
