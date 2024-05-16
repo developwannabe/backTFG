@@ -111,7 +111,7 @@ app.post("/simular", (request, response) => {
                 console.error("Error al parsear el XML:", err);
                 return;
             }
-            const tupla = "(A,B,C,D)";
+            const tupla = "(A,B,C,D,E)";
             let tup;
             sistema.ultimaEvaluacion(function(err, eval){
                 if(err){
@@ -124,7 +124,8 @@ app.post("/simular", (request, response) => {
                         .replaceAll("A", transicion.flood)
                         .replaceAll("B", transicion.objects)
                         .replaceAll("C", transicion.alert)
-                        .replaceAll("D", transicion.time);
+                        .replaceAll("D", transicion.time)
+                        .replaceAll("E", 1);
                     newJson.workspaceElements.cpnet[0].globbox[0].block
                         .find((x) => x.$.id === "ID1494615515")
                         .ml.forEach((item) => {
