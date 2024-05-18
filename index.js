@@ -128,11 +128,11 @@ app.post("/simular", (request, response) => {
                 for (let i = 0; i < eval.evaluacion.length; i++) {
                     transicion = eval.evaluacion[i];
                     tup = tupla
-                        .replaceAll("A", transicion.flood)
-                        .replaceAll("B", transicion.objects)
-                        .replaceAll("C", transicion.alert)
-                        .replaceAll("D", transicion.time)
-                        .replaceAll("E", transicion.state);
+                        .replace("A", transicion.flood)
+                        .replace("B", transicion.objects)
+                        .replace("C", transicion.alert)
+                        .replace("D", transicion.time)
+                        .replace("E", transicion.state);
                     newJson.workspaceElements.cpnet[0].globbox[0].block
                         .find((x) => x.$.id === "ID1494615515")
                         .ml.forEach((item) => {
