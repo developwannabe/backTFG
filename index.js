@@ -39,6 +39,7 @@ app.use(
 const PORT = process.env.PORT || 3000;
 
 const simulatorHost = process.env.SIMULATOR_HOST;
+const lamda_eval = process.env.LAMBDA_EVAL;
 
 function generateSessionId() {
     const id = "CPN_IDE_SESSION_" + new Date().getTime();
@@ -267,9 +268,16 @@ app.get(
     }
 );
 
-app.get("/startVision", (req, res) => {
+app.get("/eval", (req, res) => {
+    let response = res;
     sistema.obtenerLugares(function (error, result) {
-        res.send({"lugares": result.lugares});
+        let body = {
+            "lugares": result["lugares"]
+        }
+        axios.post(lamda_eval, body)
+            .then((res) => {
+                response.send(res.data);
+            });
     });
 });
 
@@ -277,4 +285,3 @@ app.get("/startVision", (req, res) => {
 app.listen(PORT, () => {
     console.log(`App está escuchando en el puerto ${PORT}`);
 });
-
