@@ -25,7 +25,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(
     cors({
-        origin: "http://localhost:3001",
+        origin: process.env.FRONT_URL,
     })
 );
 
@@ -240,7 +240,6 @@ app.post("/simular", (request, response) => {
                                         config
                                     )
                                     .then((res) => {
-                                        console.log(res.data["tokensAndMark"]);
                                         response.send(
                                             res.data["tokensAndMark"].find(
                                                 (x) => x.id === "ID1497673622"
