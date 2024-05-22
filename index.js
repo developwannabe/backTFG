@@ -77,18 +77,27 @@ app.post(
     function (req, res) {
         let email = req.user.email;
         let tkn = utils.crearToken(email, req.user.rol);
-        res.send({ "tkn": tkn, "email": email , "rol":req.user.rol});
+        res.send({ tkn: tkn, email: email, rol: req.user.rol });
     }
 );
 
-app.post("/registrarUsuario", utils.comprobarDatos, utils.rolAdmin, function (req, res) {
-    sistema.registrarUsuario(
-        { email: req.body.email, password: req.body.password, rol: req.body.rol },
-        function (nick, error) {
-            res.send({ email: nick, error: error });
-        }
-    );
-});
+app.post(
+    "/registrarUsuario",
+    utils.comprobarDatos,
+    utils.rolAdmin,
+    function (req, res) {
+        sistema.registrarUsuario(
+            {
+                email: req.body.email,
+                password: req.body.password,
+                rol: req.body.rol,
+            },
+            function (nick, error) {
+                res.send({ email: nick, error: error });
+            }
+        );
+    }
+);
 
 app.post("/cerrarSesion", function (req, res) {
     req.logout();
@@ -98,12 +107,12 @@ app.post("/cerrarSesion", function (req, res) {
 //Simulación
 app.post("/simular", (request, response) => {
     const filePath = "./nets/cadiz.cpn";
-    if(request.body == null){
-        response.send({error: "No se han enviado datos"});
+    if (request.body == null) {
+        response.send({ error: "No se han enviado datos" });
         return;
     }
-    if(request.body.origen != 11 && request.body.origen != 12){
-        response.send({error: "No se ha enviado la petición correcta"});
+    if (request.body.origen != 11 && request.body.origen != 12) {
+        response.send({ error: "No se ha enviado la petición correcta" });
         return;
     }
 
@@ -120,8 +129,8 @@ app.post("/simular", (request, response) => {
             }
             const tupla = "(A,B,C,D,E)";
             let tup;
-            sistema.ultimaEvaluacion(function(err, eval){
-                if(err){
+            sistema.ultimaEvaluacion(function (err, eval) {
+                if (err) {
                     console.error("Error al buscar la última evaluación:", err);
                     return;
                 }
@@ -144,20 +153,46 @@ app.post("/simular", (request, response) => {
                             }
                         });
                 }
-                if(request.body.origen == 11){
+                if (request.body.origen == 11) {
                     newJson.workspaceElements.cpnet[0].globbox[0].block
                         .find((x) => x.$.id === "ID1494615515")
                         .ml.forEach((item) => {
-                            if (item._.includes('val I111 =0`(6,2,[(11,"o")],0) ;')) {
-                                item._ = item._.replace('val I111 =0`(6,2,[(11,"o")],0) ;', 'val I111 ='+numTokens+'`('+request.body.destino+','+request.body.tipoVehiculo+',[(11,"o")],0) ;');
+                            if (
+                                item._.includes(
+                                    'val I111 =0`(6,2,[(11,"o")],0) ;'
+                                )
+                            ) {
+                                item._ = item._.replace(
+                                    'val I111 =0`(6,2,[(11,"o")],0) ;',
+                                    "val I111 =" +
+                                        numTokens +
+                                        "`(" +
+                                        request.body.destino +
+                                        "," +
+                                        request.body.tipoVehiculo +
+                                        ',[(11,"o")],0) ;'
+                                );
                             }
                         });
-                }else if(request.body.origen == 12){
+                } else if (request.body.origen == 12) {
                     newJson.workspaceElements.cpnet[0].globbox[0].block
                         .find((x) => x.$.id === "ID1494615515")
                         .ml.forEach((item) => {
-                            if (item._.includes('val I127=0`(6,2,[(12,"o")],0) ;')) {
-                                item._ = item._.replace('val I127=0`(6,2,[(12,"o")],0) ;', 'val I111 ='+numTokens+'`('+request.body.destino+','+request.body.tipoVehiculo+',[(12,"o")],0) ;');
+                            if (
+                                item._.includes(
+                                    'val I127=0`(6,2,[(12,"o")],0) ;'
+                                )
+                            ) {
+                                item._ = item._.replace(
+                                    'val I127=0`(6,2,[(12,"o")],0) ;',
+                                    "val I111 =" +
+                                        numTokens +
+                                        "`(" +
+                                        request.body.destino +
+                                        "," +
+                                        request.body.tipoVehiculo +
+                                        ',[(12,"o")],0) ;'
+                                );
                             }
                         });
                 }
@@ -216,20 +251,16 @@ app.post("/simular", (request, response) => {
                                     });
                             });
                     });
-            })
-            
+            });
         });
     });
 });
 
-app.post(
-    "/guardarEvaluacion",
-    (req, res) => {
-        sistema.guardarEvaluacion(req.body.datos, function (error, result) {
-            res.send({ error: error});
-        });
-    }
-)
+app.post("/guardarEvaluacion", (req, res) => {
+    sistema.guardarEvaluacion(req.body.datos, function (error, result) {
+        res.send({ error: error });
+    });
+});
 
 app.get(
     "/protegida",
@@ -239,7 +270,14 @@ app.get(
     }
 );
 
+app.get("/startVision", (req, res) => {
+    sistema.obtenerLugares(function (error, result) {
+        res.send({"lugares": result.lugares});
+    });
+});
+
 //Inicio app
 app.listen(PORT, () => {
     console.log(`App está escuchando en el puerto ${PORT}`);
 });
+

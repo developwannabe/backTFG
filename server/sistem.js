@@ -95,6 +95,16 @@ class Sistem {
             callback(null, result);
         });
     }
+
+    obtenerLugares = function(callback){
+        this.cad.obtenerLugares(function(error, result){
+            if(error){
+                callback(error, null);
+                return;
+            }
+            callback(null, result);
+        });
+    }
 }
 
 module.exports = Sistem;
