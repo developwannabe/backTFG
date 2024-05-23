@@ -286,7 +286,7 @@
         <ml id="ID1496710707">fun passB(i:INT,yy:ZoB,info:I4)=isOpenB(i,yy) andalso  OpenType(yy,info);
           <layout>fun passB(i:INT,yy:ZoB,info:I4)=isOpenB(i,yy) andalso  OpenType(yy,info);</layout>
         </ml>
-        <ml id="ID1498053377">fun tB(info:I4)=(#4 info)*tComp(info);
+        <ml id="ID1498053377">fun tB(info:I4)=(#4 info)*(1+tComp(info));
           <layout>fun tB(info:I4)=(#4 info)*tComp(info);</layout>
         </ml>
         <ml id="ID1496611525">fun traverseSection(i:INT,xx:ZoB,info:I4)= 
