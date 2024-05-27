@@ -105,6 +105,27 @@ class Sistem {
             callback(null, result);
         });
     }
+
+    buscarUsuario = function (datos, callback) {
+        this.cad.buscarUsuario(datos, function(error, result){
+            if(error){
+                callback(error, null);
+                return;
+            }
+            console.log(result)
+            callback(null, {"nombre": result[0].name, "apellidos": result[0].surname, "email": result[0].email, "rol": result[0].rol});
+        });
+    };
+
+    eliminarUsuario = function(datos, callback){
+        this.cad.eliminarUsuario(datos, function(error, result){
+            if(error){
+                callback(error, null);
+                return;
+            }
+            callback(null, result);
+        });
+    }
 }
 
 module.exports = Sistem;

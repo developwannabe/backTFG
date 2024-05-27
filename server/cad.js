@@ -24,6 +24,14 @@ class Cad {
         this.db.buscar("usuarios", datos, callback);
     };
 
+    modificarUsuario = function (datos, callback) {
+        this.db.actualizar("usuarios", datos, callback);
+    }
+
+    eliminarUsuario = function (datos, callback) {
+        this.db.eliminar("usuarios", datos, callback);
+    }
+
     insertarEvaluacion = function (datos, callback) {
         this.db.insertar("evaluaciones", datos, callback);
     }

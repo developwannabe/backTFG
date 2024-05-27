@@ -100,6 +100,44 @@ app.post(
     }
 );
 
+app.get("/usuario/:email", utils.rolAdmin, (req, res) => {
+    const email = req.params.email;
+    sistema.buscarUsuario({"email":email}, function (error, result) {
+        if(error){
+            res.send({ error: error });
+            return;
+        }
+        res.send(result);
+    });
+});
+
+app.post("/usuario", utils.rolAdmin, (req, res) => {
+    /*sistema.buscarUsuarios(req.body, function (error) {
+        res.send({ error: error });
+    });*/
+    console.log("Post usuario");
+    res.send();
+});
+
+app.patch("/usuario", utils.rolAdmin, (req, res) => {
+    /*sistema.modificarUsuario(req.body, function (error) {
+        res.send({ error: error });
+    });*/
+    console.log("Patch usuario");
+    res.send();
+});
+
+app.delete("/usuario", utils.rolAdmin, (req, res) => {
+    sistema.eliminarUsuario({"email":req.body.email}, function (error, result) {
+        if(error){
+            res.send({ error: error });
+            return;
+        }
+        res.send(result);
+    });
+});
+
+
 app.post("/cerrarSesion", function (req, res) {
     req.logout();
     res.send({ error: null });
