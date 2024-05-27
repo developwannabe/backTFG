@@ -120,11 +120,14 @@ app.post("/usuario", utils.rolAdmin, (req, res) => {
 });
 
 app.patch("/usuario", utils.rolAdmin, (req, res) => {
-    /*sistema.modificarUsuario(req.body, function (error) {
-        res.send({ error: error });
-    });*/
+    sistema.modificarUsuario(req.body, function (error, result) {
+        if(error){
+            res.send({ error: error });
+            return;
+        }
+        res.send(result);
+    });
     console.log("Patch usuario");
-    res.send();
 });
 
 app.delete("/usuario", utils.rolAdmin, (req, res) => {

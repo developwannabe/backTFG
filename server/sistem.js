@@ -126,6 +126,38 @@ class Sistem {
             callback(null, result);
         });
     }
+
+    modificarUsuario = async function(datos, callback){
+        let mod = {};
+        let dat = [];
+        if(datos.datos.nombre){
+            mod["name"] = datos.datos.nombre;  
+        }
+        if(datos.datos.apellidos){
+            mod["surname"] = datos.datos.apellidos;
+        }
+        if(datos.datos.email){
+            mod["email"] = datos.datos.email;
+        }
+        if(datos.datos.rol){
+            mod["rol"] = datos.datos.rol;
+        }
+        if(datos.datos.password){
+            mod["password"] = await bcrypt.hash(datos.datos.password, 10);
+        }
+        mod = {"$set": mod};
+        dat = [{"email":datos.email}, mod];
+        this.cad.modificarUsuario(dat, function(error, result){
+            if(error){
+                callback(error, null);
+                return;
+            }
+            callback(null, result);
+        });
+    }
+
+    obtenerUsuarios = function(callback){
+    }
 }
 
 module.exports = Sistem;
