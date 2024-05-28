@@ -89,6 +89,8 @@ app.post(
     function (req, res) {
         sistema.registrarUsuario(
             {
+                name: req.body.nombre,
+                surname: req.body.apellidos,
                 email: req.body.email,
                 password: req.body.password,
                 rol: req.body.rol,
