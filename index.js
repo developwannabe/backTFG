@@ -140,6 +140,12 @@ app.delete("/usuario", utils.rolAdmin, (req, res) => {
     });
 });
 
+app.post("/buscarUsuarios", utils.rolAdmin, (req, res) => {
+    sistema.buscarUsuarios(req.body, function (error, result) {
+        res.send({ error: error, usuarios: result });
+    });
+});
+
 
 app.post("/cerrarSesion", function (req, res) {
     req.logout();

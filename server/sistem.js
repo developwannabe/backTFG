@@ -156,7 +156,16 @@ class Sistem {
         });
     }
 
-    obtenerUsuarios = function(callback){
+    buscarUsuarios = function(filtro,callback){
+        this.cad.buscarUsuarios(filtro, function(error, result){
+            if(error){
+                callback(error, null);
+                return;
+            }
+            let usuarios = [];
+            result.forEach((user) => usuarios.push({"nombre": user.name, "apellidos": user.surname, "email": user.email, "rol": user.rol}));
+            callback(null, usuarios);
+        });
     }
 }
 

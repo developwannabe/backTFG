@@ -43,6 +43,14 @@ class Cad {
     obtenerLugares = function (callback) {
         this.db.buscarUno("lugares", {}, { sort: { "time" : -1 } }, callback);
     }
+    
+    buscarUsuarios = function(filtro, callback){
+        let regexFiltro = {};
+        for (let campo in filtro) {
+            regexFiltro[campo] = new RegExp(filtro[campo], 'i');
+        }
+        this.db.buscar("usuarios", regexFiltro, callback);
+    }
 }
 
 class BBDD {
