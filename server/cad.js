@@ -45,10 +45,14 @@ class Cad {
     }
     
     buscarUsuarios = function(filtro, callback){
-        let regexFiltro = {};
-        for (let campo in filtro) {
-            regexFiltro[campo] = new RegExp(filtro[campo], 'i');
-        }
+        let input = filtro.input.replace(/a/gi, '[aá]').replace(/e/gi, '[eé]').replace(/i/gi, '[ií]').replace(/o/gi, '[oó]').replace(/u/gi, '[uú]');
+        let regexFiltro = {
+            $or: [
+                { email: new RegExp(input, 'i') },
+                { name: new RegExp(input, 'i') },
+                { surname: new RegExp(input, 'i') }
+            ]
+        };
         this.db.buscar("usuarios", regexFiltro, callback);
     }
 }
