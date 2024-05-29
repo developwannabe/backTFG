@@ -101,8 +101,19 @@ class Sistem {
         });
     };
 
-    obtenerLugares = function (callback) {
-        this.cad.obtenerLugares(function (error, result) {
+    obtenerTransiciones = function (callback) {
+        this.cad.obtenerTransiciones(function (error, result) {
+            if (error) {
+                callback(error, null);
+                return;
+            }
+            callback(null, result);
+        });
+    };
+
+    insertarTransiciones = function (transiciones, callback) {
+        let transicionesD = {time: new Date().getTime(), transiciones: transiciones.transiciones};
+        this.cad.insertarTransiciones(transicionesD, function (error, result) {
             if (error) {
                 callback(error, null);
                 return;

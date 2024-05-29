@@ -317,6 +317,22 @@ app.get(
     }
 );
 
+app.get("/transiciones", utils.rolEvaluador, (req, res) => {
+    sistema.obtenerTransiciones(function (error, result) {
+        res.send(result.transiciones);
+    });
+});
+
+/*app.post("/transiciones", utils.rolEvaluador, (req, res) => {
+    sistema.insertarTransiciones(req.body, function (error, result){
+        if(error){
+            res.send({ error: error });
+            return;
+        }
+        res.send(result);
+    });
+});*/
+
 app.get("/eval", (req, res) => {
     let response = res;
     sistema.obtenerLugares(function (error, result) {
