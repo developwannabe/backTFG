@@ -24,6 +24,10 @@ class Cad {
         this.db.buscar("usuarios", datos, callback);
     };
 
+    insertarGPT = function (datos, callback){
+        this.db.actualizar("evaluaciones",datos,callback);
+    }
+
     modificarUsuario = function (datos, callback) {
         this.db.actualizar("usuarios", datos, callback);
     }
@@ -38,6 +42,10 @@ class Cad {
 
     insertarTransiciones = function (datos, callback) {
         this.db.insertar("transiciones", datos, callback);
+    }
+
+    buscarEvaluacion = function (datos, callback){
+        this.db.buscarUno("evaluaciones", {}, { sort: { "time" : -1 } }, callback);
     }
 
     ultimaEvaluacion = function (callback) {

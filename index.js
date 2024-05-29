@@ -11,6 +11,9 @@ const Sistem = require("./server/sistem.js");
 const bodyParser = require("body-parser");
 const cookieSession = require("cookie-session");
 const utils = require("./server/utils.js");
+const FormData = require("form-data");
+const path = require("path");
+const { time } = require("console");
 
 const sistema = new Sistem();
 module.exports.sistema = sistema;
@@ -40,6 +43,9 @@ const PORT = process.env.PORT || 3000;
 
 const simulatorHost = process.env.SIMULATOR_HOST;
 const lamda_eval = process.env.LAMBDA_EVAL;
+const YOLO = process.env.YOLO_URL;
+const GPT = process.env.GPT_URL;
+const GPT_TOKEN = process.env.GPT_TOKEN;
 
 function generateSessionId() {
     const id = "CPN_IDE_SESSION_" + new Date().getTime();
@@ -104,8 +110,8 @@ app.post(
 
 app.get("/usuario/:email", utils.rolAdmin, (req, res) => {
     const email = req.params.email;
-    sistema.buscarUsuario({"email":email}, function (error, result) {
-        if(error){
+    sistema.buscarUsuario({ email: email }, function (error, result) {
+        if (error) {
             res.send({ error: error });
             return;
         }
@@ -123,7 +129,7 @@ app.post("/usuario", utils.rolAdmin, (req, res) => {
 
 app.patch("/usuario", utils.rolAdmin, (req, res) => {
     sistema.modificarUsuario(req.body, function (error, result) {
-        if(error){
+        if (error) {
             res.send({ error: error });
             return;
         }
@@ -133,13 +139,16 @@ app.patch("/usuario", utils.rolAdmin, (req, res) => {
 });
 
 app.delete("/usuario", utils.rolAdmin, (req, res) => {
-    sistema.eliminarUsuario({"email":req.body.email}, function (error, result) {
-        if(error){
-            res.send({ error: error });
-            return;
+    sistema.eliminarUsuario(
+        { email: req.body.email },
+        function (error, result) {
+            if (error) {
+                res.send({ error: error });
+                return;
+            }
+            res.send(result);
         }
-        res.send(result);
-    });
+    );
 });
 
 app.post("/buscarUsuarios", utils.rolAdmin, (req, res) => {
@@ -147,7 +156,6 @@ app.post("/buscarUsuarios", utils.rolAdmin, (req, res) => {
         res.send({ error: error, usuarios: result });
     });
 });
-
 
 app.post("/cerrarSesion", function (req, res) {
     req.logout();
@@ -190,7 +198,7 @@ app.post("/simular", (request, response) => {
                         .replace("A", transicion.flood)
                         .replace("B", transicion.objects)
                         .replace("C", transicion.fis)
-                        .replace("D", transicion.time)
+                        .replace("D", transicion.time);
                     newJson.workspaceElements.cpnet[0].globbox[0].block
                         .find((x) => x.$.id === "ID1494615515")
                         .ml.forEach((item) => {
@@ -317,13 +325,9 @@ app.get(
     }
 );
 
-app.get("/transiciones", utils.rolEvaluador, (req, res) => {
-    sistema.obtenerTransiciones(function (error, result) {
-        res.send(result.transiciones);
-    });
-});
+app.get("/transiciones", utils.rolEvaluador, (req, res) => {});
 
-/*app.post("/transiciones", utils.rolEvaluador, (req, res) => {
+app.post("/transiciones", utils.rolEvaluador, (req, res) => {
     sistema.insertarTransiciones(req.body, function (error, result){
         if(error){
             res.send({ error: error });
@@ -331,22 +335,128 @@ app.get("/transiciones", utils.rolEvaluador, (req, res) => {
         }
         res.send(result);
     });
-});*/
+});
 
-app.get("/eval", (req, res) => {
-    let response = res;
-    sistema.obtenerLugares(function (error, result) {
-        let body = {
-            "lugares": result["lugares"]
-        }
-        axios.post(lamda_eval, body)
-            .then((res) => {
-                response.send(res.data);
+app.get("/iniciarEvaluacion/:id", utils.rolEvaluador, (req, res) => {
+    sistema.obtenerTransiciones(function (error, transiciones) {
+        if (
+            req.params.id == null ||
+            !fs.existsSync(`img/eval/eval_${req.params.id}`)
+        ) {
+            let tiempo = new Date().getTime();
+            fs.mkdirSync(`img/eval/eval_${tiempo}`);
+            let tr = [];
+            eval = { time: tiempo, evaluacion: {} };
+            transiciones.transiciones.forEach((transicion) => {
+                tr.push(transicion.id);
+                eval.evaluacion[transicion.id] = {
+                    flood: 0,
+                    objects: 0,
+                    fis: 0,
+                    gpt: {
+                        flood: 0,
+                        objects: 0
+                    }
+                }
             });
+            sistema.guardarEvaluacion(eval, function (error, result) {
+                res.send({ id: tiempo, transiciones:tr });
+            });
+        } else {
+            sistema.obtenerEvaluacion(req.params.id, function (error, result) {
+                if (error || result == null) {
+                    res.send({ error: error });
+                    return;
+                }
+                res.send({ id: req.params.id, transiciones:Object.keys(result.evaluacion)});
+            });
+        }
     });
 });
 
-//Inicio app
+app.get(
+    "/evalImage/:idEval/:transicion",
+    utils.rolEvaluador,
+    async (req, res) => {
+        if (req.params.transicion) {
+            const dirPath = path.join(
+                __dirname,
+                "img",
+                "eval",
+                `eval_${req.params.idEval}`
+            );
+            const filePath = path.join(dirPath, `${req.params.transicion}.png`);
+
+            if (fs.existsSync(filePath)) {
+                sistema.buscarGPT("1716999083898", "A1A2", function (result) {
+                    res.send({ status: true, GPT: result });
+                });
+                return;
+            }
+
+            try {
+                let form = new FormData();
+                form.append(
+                    "file",
+                    fs.createReadStream(
+                        path.join(
+                            __dirname,
+                            "img",
+                            `${req.params.transicion}.jpg`
+                        )
+                    )
+                );
+                const gpt = { data: { A1A2: { flood: 80, objects: 7 } } };
+                //await axios.post(
+                //    GPT,
+                //    { lugares: [req.params.transicion] },
+                //    {
+                //        headers: {
+                //            Authorization: "Bearer " + GPT_TOKEN,
+                //        },
+                //    }
+                //);
+                sistema.insertarGPT(
+                    req.params.idEval,
+                    req.params.transicion,
+                    gpt.data[req.params.transicion],
+                    async function () {
+                        const response = await axios.post(YOLO, form, {
+                            headers: form.getHeaders(),
+                            responseType: "arraybuffer",
+                        });
+
+                        if (!fs.existsSync(dirPath)) {
+                            fs.mkdirSync(dirPath, { recursive: true });
+                        }
+                        fs.writeFile(filePath, response.data, (err) => {
+                            if (err) {
+                                console.error(
+                                    "Error al escribir el archivo:",
+                                    err
+                                );
+                                res.status(500).send({
+                                    error: "Error al escribir el archivo",
+                                });
+                            } else {
+                                res.send({
+                                    status: true,
+                                    GPT: gpt.data[req.params.transicion],
+                                });
+                            }
+                        });
+                    }
+                );
+            } catch (error) {
+                console.log(error);
+                res.status(500).send({ error: error.message });
+            }
+        } else {
+            res.status(400).send({ error: "Transición no especificada" });
+        }
+    }
+);
+
 app.listen(PORT, () => {
     console.log(`App está escuchando en el puerto ${PORT}`);
 });

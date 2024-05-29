@@ -75,14 +75,7 @@ class Sistem {
     };
 
     guardarEvaluacion = function (evaluacion, callback) {
-        for (let i = 0; i < evaluacion.length; i++) {
-            evaluacion[i].time = Math.floor(Math.random() * 10) + 1;
-        }
-        let evalG = {
-            time: new Date().getTime(),
-            evaluacion: evaluacion,
-        };
-        this.cad.insertarEvaluacion(evalG, function (error, result) {
+        this.cad.insertarEvaluacion(evaluacion, function (error, result) {
             if (error) {
                 callback(error, null);
                 return;
@@ -93,6 +86,16 @@ class Sistem {
 
     ultimaEvaluacion = function (callback) {
         this.cad.ultimaEvaluacion(function (error, result) {
+            if (error) {
+                callback(error, null);
+                return;
+            }
+            callback(null, result);
+        });
+    };
+
+    obtenerEvaluacion = function (idEval, callback) {
+        this.cad.buscarEvaluacion({ time: idEval }, function (error, result) {
             if (error) {
                 callback(error, null);
                 return;
@@ -182,6 +185,21 @@ class Sistem {
             callback(null, result);
         });
     };
+
+    buscarGPT = function(idEval, transicion, callback){
+        this.cad.buscarEvaluacion({time:idEval},function(error, result){
+            callback(result.evaluacion[`info4${transicion}`].gpt);
+        });
+    }
+
+    insertarGPT = function(idEval, transicion, gpt,callback){
+        let datos = [];
+        datos.push({time: parseInt(idEval)});
+        datos.push({ $set: { [`evaluacion.info4${transicion}.gpt`]: gpt } });
+        this.cad.insertarGPT(datos, function(){
+            callback()
+        });
+    }
 
     buscarUsuarios = function (filtro, callback) {
         this.cad.buscarUsuarios(filtro, function (error, result) {
