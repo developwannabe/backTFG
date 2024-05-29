@@ -328,8 +328,8 @@ app.get(
 app.get("/transiciones", utils.rolEvaluador, (req, res) => {});
 
 app.post("/transiciones", utils.rolEvaluador, (req, res) => {
-    sistema.insertarTransiciones(req.body, function (error, result){
-        if(error){
+    sistema.insertarTransiciones(req.body, function (error, result) {
+        if (error) {
             res.send({ error: error });
             return;
         }
@@ -338,40 +338,43 @@ app.post("/transiciones", utils.rolEvaluador, (req, res) => {
 });
 
 app.get("/iniciarEvaluacion/:id", utils.rolEvaluador, (req, res) => {
-    sistema.obtenerTransiciones(function (error, transiciones) {
-        if (
-            req.params.id == null ||
-            !fs.existsSync(`img/eval/eval_${req.params.id}`)
-        ) {
+    if (
+        req.params.id == 0 ||
+        !fs.existsSync(`img/eval/eval_${req.params.id}`)
+    ) {
+        sistema.obtenerTransiciones(function (error, transiciones) {
             let tiempo = new Date().getTime();
             fs.mkdirSync(`img/eval/eval_${tiempo}`);
             let tr = [];
             eval = { time: tiempo, evaluacion: {} };
             transiciones.transiciones.forEach((transicion) => {
                 tr.push(transicion.id);
-                eval.evaluacion[transicion.id] = {
+                eval.evaluacion["info4" + transicion.id] = {
                     flood: 0,
                     objects: 0,
                     fis: 0,
                     gpt: {
                         flood: 0,
-                        objects: 0
-                    }
-                }
+                        objects: 0,
+                    },
+                };
             });
             sistema.guardarEvaluacion(eval, function (error, result) {
-                res.send({ id: tiempo, transiciones:tr });
+                res.send({ id: tiempo, transiciones: tr });
             });
-        } else {
-            sistema.obtenerEvaluacion(req.params.id, function (error, result) {
-                if (error || result == null) {
-                    res.send({ error: error });
-                    return;
-                }
-                res.send({ id: req.params.id, transiciones:Object.keys(result.evaluacion)});
+        });
+    } else {
+        sistema.obtenerEvaluacion(req.params.id, function (error, result) {
+            if (error || result == null) {
+                res.send({ error: error });
+                return;
+            }
+            res.send({
+                id: req.params.id,
+                transiciones: Object.keys(result.evaluacion),
             });
-        }
-    });
+        });
+    }
 });
 
 app.get(
@@ -406,16 +409,13 @@ app.get(
                         )
                     )
                 );
-                const gpt = { data: { A1A2: { flood: 80, objects: 7 } } };
-                //await axios.post(
-                //    GPT,
-                //    { lugares: [req.params.transicion] },
-                //    {
-                //        headers: {
-                //            Authorization: "Bearer " + GPT_TOKEN,
-                //        },
-                //    }
-                //);
+                console.log(req.params.transicion);
+                const gpt = await axios.post(
+                    GPT,
+                    { lugares: [req.params.transicion] },
+                    { headers: { Authorization: "Bearer " + GPT_TOKEN } }
+                );
+                console.log(gpt);
                 sistema.insertarGPT(
                     req.params.idEval,
                     req.params.transicion,
