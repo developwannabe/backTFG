@@ -115,13 +115,34 @@ class Sistem {
     };
 
     insertarTransiciones = function (transiciones, callback) {
-        let transicionesD = {time: new Date().getTime(), transiciones: transiciones.transiciones};
+        let transicionesD = {
+            time: new Date().getTime(),
+            transiciones: transiciones.transiciones,
+        };
         this.cad.insertarTransiciones(transicionesD, function (error, result) {
             if (error) {
                 callback(error, null);
                 return;
             }
             callback(null, result);
+        });
+    };
+
+    evaluarTransicion = function (datos, callback) {
+        let datosI = [];
+        datosI.push({ time: parseInt(datos.id) });
+        datosI.push({
+            $set: {
+                [`evaluacion.info4${datos.transition}.flood`]: parseInt(
+                    datos.flood
+                ),
+                [`evaluacion.info4${datos.transition}.objects`]: parseInt(
+                    datos.objects
+                ),
+            },
+        });
+        this.cad.insertarEval(datosI, function () {
+            callback();
         });
     };
 
@@ -167,7 +188,7 @@ class Sistem {
                 datos.datos.rol == "personal"
             ) {
                 mod["rol"] = datos.datos.rol;
-            }else{
+            } else {
                 callback(-1, null);
                 return;
             }
@@ -186,20 +207,20 @@ class Sistem {
         });
     };
 
-    buscarGPT = function(idEval, transicion, callback){
-        this.cad.buscarEvaluacion({time:idEval},function(error, result){
+    buscarGPT = function (idEval, transicion, callback) {
+        this.cad.buscarEvaluacion({ time: idEval }, function (error, result) {
             callback(result.evaluacion[`info4${transicion}`].gpt);
         });
-    }
+    };
 
-    insertarGPT = function(idEval, transicion, gpt,callback){
+    insertarGPT = function (idEval, transicion, gpt, callback) {
         let datos = [];
-        datos.push({time: parseInt(idEval)});
+        datos.push({ time: parseInt(idEval) });
         datos.push({ $set: { [`evaluacion.info4${transicion}.gpt`]: gpt } });
-        this.cad.insertarGPT(datos, function(){
-            callback()
+        this.cad.insertarGPT(datos, function () {
+            callback();
         });
-    }
+    };
 
     buscarUsuarios = function (filtro, callback) {
         this.cad.buscarUsuarios(filtro, function (error, result) {

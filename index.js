@@ -350,12 +350,12 @@ app.get("/iniciarEvaluacion/:id", utils.rolEvaluador, (req, res) => {
             transiciones.transiciones.forEach((transicion) => {
                 tr.push(transicion.id);
                 eval.evaluacion["info4" + transicion.id] = {
-                    flood: 0,
-                    objects: 0,
-                    fis: 0,
+                    flood: null,
+                    objects: null,
+                    fis: null,
                     gpt: {
-                        flood: 0,
-                        objects: 0,
+                        flood: null,
+                        objects: null,
                     },
                 };
             });
@@ -372,15 +372,23 @@ app.get("/iniciarEvaluacion/:id", utils.rolEvaluador, (req, res) => {
             res.send({
                 id: req.params.id,
                 transiciones: Object.keys(result.evaluacion),
+                evals: result.evaluacion,
             });
         });
     }
+});
+
+app.post("/evaluarTransicion", utils.rolEvaluador, (req, res) => {
+    sistema.evaluarTransicion(req.body, function (error, result) {
+        res.send({ error: error, result: result });
+    });
 });
 
 app.get(
     "/evalImage/:idEval/:transicion",
     utils.rolEvaluador,
     async (req, res) => {
+        console.log(req.params);
         if (req.params.transicion) {
             const dirPath = path.join(
                 __dirname,
@@ -391,9 +399,18 @@ app.get(
             const filePath = path.join(dirPath, `${req.params.transicion}.png`);
 
             if (fs.existsSync(filePath)) {
-                sistema.buscarGPT("1716999083898", "A1A2", function (result) {
-                    res.send({ status: true, GPT: result });
-                });
+                sistema.buscarGPT(
+                    "1716999083898",
+                    req.params.transicion,
+                    function (result) {
+                        sistema.obtenerEvaluacion(
+                            req.params.idEval,
+                            function (error, eval) {
+                                res.send({ status: true, GPT: result, flood: eval.evaluacion["info4" + req.params.transicion].flood, objects: eval.evaluacion["info4" + req.params.transicion].objects});
+                            }
+                        );
+                    }
+                );
                 return;
             }
 
@@ -409,13 +426,11 @@ app.get(
                         )
                     )
                 );
-                console.log(req.params.transicion);
                 const gpt = await axios.post(
                     GPT,
                     { lugares: [req.params.transicion] },
                     { headers: { Authorization: "Bearer " + GPT_TOKEN } }
                 );
-                console.log(gpt);
                 sistema.insertarGPT(
                     req.params.idEval,
                     req.params.transicion,

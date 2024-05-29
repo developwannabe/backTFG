@@ -40,6 +40,10 @@ class Cad {
         this.db.insertar("evaluaciones", datos, callback);
     }
 
+    insertarEval = function (datos, callback) {
+        this.db.actualizar("evaluaciones", datos, callback);
+    }
+
     insertarTransiciones = function (datos, callback) {
         this.db.insertar("transiciones", datos, callback);
     }
