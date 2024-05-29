@@ -10,8 +10,7 @@ const crearToken = function (email, rol) {
 
 const comprobarDatos = function (req, res, next) {
     if (req.body.email && req.body.password) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(req.body.email)) {
+        if (regexEmail(req.body.email) === false){
             res.send({ error: -1 });
             return;
         }
@@ -20,6 +19,11 @@ const comprobarDatos = function (req, res, next) {
         res.send({ error: -2 });
     }
 };
+
+const regexEmail = function(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
 
 const extraerPayload = function(token) {
     return jwt.verify(token, process.env.JWTSECRET);
@@ -68,5 +72,6 @@ module.exports = {
     comprobarDatos,
     rolAdmin,
     rolEvaluador,
-    rolUsuario
+    rolUsuario,
+    regexEmail
 };
