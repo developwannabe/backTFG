@@ -111,7 +111,21 @@ class Sistem {
         this.cad.insertarFIS(datos, function () {
             callback();
         });
-    }
+    };
+
+    evaluarTransicionT = function (datos, callback) {
+        console.log("oaijsdo")
+        let datosI = [];
+        datosI.push({ time: parseInt(datos.id) });
+        datosI.push({
+            $set: {
+                [`evaluacion.info4${datos.trn}.transitabilidad`]: parseInt(datos.val),
+            },
+        });
+        this.cad.evaluarTransicion(datosI, function(error, result){
+            callback();
+        });
+    };
 
     obtenerTransiciones = function (callback) {
         this.cad.obtenerTransiciones(function (error, result) {

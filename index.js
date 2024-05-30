@@ -46,6 +46,7 @@ const lambda_eval = process.env.LAMBDA_EVAL;
 const YOLO = process.env.YOLO_URL;
 const GPT = process.env.GPT_URL;
 const GPT_TOKEN = process.env.GPT_TOKEN;
+const MAGNITUDE = process.env.MAGNITUDE;
 
 function generateSessionId() {
     const id = "CPN_IDE_SESSION_" + new Date().getTime();
@@ -143,7 +144,7 @@ app.get("/fisTransiciones/:idSession", utils.rolEvaluador, (req, res) => {
                     path: keys[i].slice(5),
                     flood: eval.evaluacion[keys[i]].flood,
                     objects: eval.evaluacion[keys[i]].objects,
-                    magnitude: magnitude,
+                    magnitude: parseInt(MAGNITUDE),
                 });
             }
             await axios
@@ -347,6 +348,15 @@ app.post("/simular", (request, response) => {
     });
 });
 
+app.get("/transitabilidad/:id/:trn/:val", utils.rolEvaluador, (req, res) => {
+    sistema.evaluarTransicionT(
+        { id: req.params.id, trn: req.params.trn, val: req.params.val },
+        function (error, result) {
+            res.send(result);
+        }
+    );
+});
+
 app.post("/guardarEvaluacion", (req, res) => {
     sistema.guardarEvaluacion(req.body.datos, function (error, result) {
         res.send({ error: error });
@@ -388,6 +398,7 @@ app.get("/iniciarEvaluacion/:id", utils.rolEvaluador, (req, res) => {
                 eval.evaluacion["info4" + transicion.id] = {
                     flood: null,
                     objects: null,
+                    magnitude: MAGNITUDE,
                     fis: null,
                     gpt: {
                         flood: null,
@@ -396,7 +407,11 @@ app.get("/iniciarEvaluacion/:id", utils.rolEvaluador, (req, res) => {
                 };
             });
             sistema.guardarEvaluacion(eval, function (error, result) {
-                res.send({ id: tiempo, transiciones: tr });
+                res.send({
+                    id: tiempo,
+                    transiciones: tr,
+                    magnitude: MAGNITUDE,
+                });
             });
         });
     } else {
@@ -408,6 +423,7 @@ app.get("/iniciarEvaluacion/:id", utils.rolEvaluador, (req, res) => {
             res.send({
                 id: req.params.id,
                 transiciones: Object.keys(result.evaluacion),
+                magnitude: result.magnitude,
                 evals: result.evaluacion,
             });
         });
