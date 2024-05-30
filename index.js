@@ -152,7 +152,6 @@ app.get("/fisTransiciones/:idSession", utils.rolEvaluador, (req, res) => {
                 })
                 .then((resp) => {
                     let keys = Object.keys(resp.data);
-                    console.log(resp.data[keys[0]]);
                     for (let i = 0; i < keys.length; i++) {
                         sistema.insertarFIS(
                             keys[i],

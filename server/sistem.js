@@ -108,7 +108,6 @@ class Sistem {
         let datos = [];
         datos.push({ time: parseInt(idEval) });
         datos.push({ $set: { [`evaluacion.info4${transicion}.fis`]: fis } });
-        console.log(datos);
         this.cad.insertarFIS(datos, function () {
             callback();
         });
