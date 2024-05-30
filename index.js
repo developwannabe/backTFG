@@ -42,7 +42,7 @@ app.use(
 const PORT = process.env.PORT || 3000;
 
 const simulatorHost = process.env.SIMULATOR_HOST;
-const lamda_eval = process.env.LAMBDA_EVAL;
+const lambda_eval = process.env.LAMBDA_EVAL;
 const YOLO = process.env.YOLO_URL;
 const GPT = process.env.GPT_URL;
 const GPT_TOKEN = process.env.GPT_TOKEN;
@@ -119,14 +119,6 @@ app.get("/usuario/:email", utils.rolAdmin, (req, res) => {
     });
 });
 
-app.post("/usuario", utils.rolAdmin, (req, res) => {
-    /*sistema.buscarUsuarios(req.body, function (error) {
-        res.send({ error: error });
-    });*/
-    console.log("Post usuario");
-    res.send();
-});
-
 app.patch("/usuario", utils.rolAdmin, (req, res) => {
     sistema.modificarUsuario(req.body, function (error, result) {
         if (error) {
@@ -135,7 +127,52 @@ app.patch("/usuario", utils.rolAdmin, (req, res) => {
         }
         res.send(result);
     });
-    console.log("Patch usuario");
+});
+
+app.get("/fisTransiciones/:idSession", utils.rolEvaluador, (req, res) => {
+    let pet = {};
+    let respt = {};
+    sistema.obtenerEvaluacion(
+        req.params.idSession,
+        async function (error, eval) {
+            pet["paths"] = [];
+            let magnitude = 60;
+            let keys = Object.keys(eval.evaluacion);
+            for (let i = 0; i < keys.length; i++) {
+                pet["paths"].push({
+                    path: keys[i].slice(5),
+                    flood: eval.evaluacion[keys[i]].flood,
+                    objects: eval.evaluacion[keys[i]].objects,
+                    magnitude: magnitude,
+                });
+            }
+            await axios
+                .post(lambda_eval, pet, {
+                    headers: { Authorization: "Bearer " + GPT_TOKEN },
+                })
+                .then((resp) => {
+                    let keys = Object.keys(resp.data);
+                    console.log(resp.data[keys[0]]);
+                    for (let i = 0; i < keys.length; i++) {
+                        sistema.insertarFIS(
+                            keys[i],
+                            req.params.idSession,
+                            Math.round(resp.data[keys[i]]),
+                            function () {
+                                if (i == keys.length - 1) {
+                                    sistema.obtenerEvaluacion(
+                                        req.params.idSession,
+                                        function (error, eval) {
+                                            res.send(eval);
+                                        }
+                                    );
+                                }
+                            }
+                        );
+                    }
+                });
+        }
+    );
 });
 
 app.delete("/usuario", utils.rolAdmin, (req, res) => {
@@ -388,7 +425,6 @@ app.get(
     "/evalImage/:idEval/:transicion",
     utils.rolEvaluador,
     async (req, res) => {
-        console.log(req.params);
         if (req.params.transicion) {
             const dirPath = path.join(
                 __dirname,
@@ -406,7 +442,17 @@ app.get(
                         sistema.obtenerEvaluacion(
                             req.params.idEval,
                             function (error, eval) {
-                                res.send({ status: true, GPT: result, flood: eval.evaluacion["info4" + req.params.transicion].flood, objects: eval.evaluacion["info4" + req.params.transicion].objects});
+                                res.send({
+                                    status: true,
+                                    GPT: result,
+                                    flood: eval.evaluacion[
+                                        "info4" + req.params.transicion
+                                    ].flood,
+                                    objects:
+                                        eval.evaluacion[
+                                            "info4" + req.params.transicion
+                                        ].objects,
+                                });
                             }
                         );
                     }

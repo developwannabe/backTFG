@@ -104,6 +104,16 @@ class Sistem {
         });
     };
 
+    insertarFIS = function (transicion, idEval, fis, callback) {
+        let datos = [];
+        datos.push({ time: parseInt(idEval) });
+        datos.push({ $set: { [`evaluacion.info4${transicion}.fis`]: fis } });
+        console.log(datos);
+        this.cad.insertarFIS(datos, function () {
+            callback();
+        });
+    }
+
     obtenerTransiciones = function (callback) {
         this.cad.obtenerTransiciones(function (error, result) {
             if (error) {

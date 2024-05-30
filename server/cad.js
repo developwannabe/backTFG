@@ -28,6 +28,11 @@ class Cad {
         this.db.actualizar("evaluaciones",datos,callback);
     }
 
+    insertarFIS = function (datos, callback){
+        this.db.actualizar("evaluaciones",datos,callback);
+    }
+
+
     modificarUsuario = function (datos, callback) {
         this.db.actualizar("usuarios", datos, callback);
     }
