@@ -144,7 +144,7 @@ app.get("/fisTransiciones/:idSession", utils.rolEvaluador, (req, res) => {
                     path: keys[i].slice(5),
                     flood: eval.evaluacion[keys[i]].flood,
                     objects: eval.evaluacion[keys[i]].objects,
-                    magnitude: parseInt(MAGNITUDE),
+                    magnitude: eval.magnitude,
                 });
             }
             await axios
@@ -363,6 +363,12 @@ app.post("/guardarEvaluacion", (req, res) => {
     });
 });
 
+app.get("/finalizarEvaluacion/:id", utils.rolEvaluador, (req, res) => {
+    sistema.finalizarEvaluacion(req.params.id, function (error, result) {
+        res.send({ error: error });
+    });
+});
+
 app.get(
     "/protegida",
     passport.authenticate("jwt", { session: false }),
@@ -392,25 +398,29 @@ app.get("/iniciarEvaluacion/:id", utils.rolEvaluador, (req, res) => {
             let tiempo = new Date().getTime();
             fs.mkdirSync(`img/eval/eval_${tiempo}`);
             let tr = [];
-            eval = { time: tiempo, evaluacion: {}, finalizada: false};
+            eval = {
+                time: tiempo,
+                evaluacion: {},
+                magnitude: parseInt(MAGNITUDE),
+                finalizada: false,
+            };
             transiciones.transiciones.forEach((transicion) => {
                 tr.push(transicion.id);
                 eval.evaluacion["info4" + transicion.id] = {
                     flood: null,
                     objects: null,
-                    magnitude: MAGNITUDE,
                     fis: null,
                     gpt: {
                         flood: null,
                         objects: null,
-                    }
+                    },
                 };
             });
             sistema.guardarEvaluacion(eval, function (error, result) {
                 res.send({
                     id: tiempo,
                     transiciones: tr,
-                    magnitude: MAGNITUDE,
+                    magnitude: parseInt(MAGNITUDE),
                 });
             });
         });
@@ -437,7 +447,7 @@ app.post("/evaluarTransicion", utils.rolEvaluador, (req, res) => {
 });
 
 app.get("/evaluacionRes/:id", utils.rolEvaluador, (req, res) => {
-    console.log("p")
+    console.log("p");
     sistema.obtenerEvaluacion(req.params.id, function (error, result) {
         res.send({ error: error, result: result });
     });
