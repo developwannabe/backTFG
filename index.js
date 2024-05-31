@@ -15,6 +15,8 @@ const FormData = require("form-data");
 const path = require("path");
 const { time } = require("console");
 
+app.use(cors());
+
 const sistema = new Sistem();
 module.exports.sistema = sistema;
 
@@ -26,7 +28,6 @@ const numTokens = 200;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(cors());
 
 app.use(
     cookieSession({
