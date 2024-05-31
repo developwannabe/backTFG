@@ -26,11 +26,7 @@ const numTokens = 200;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(
-    cors({
-        origin: process.env.FRONT_URL,
-    })
-);
+app.use(cors());
 
 app.use(
     cookieSession({
