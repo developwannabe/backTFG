@@ -15,13 +15,13 @@ const FormData = require("form-data");
 const path = require("path");
 const { time } = require("console");
 
+const app = express();
 app.use(cors());
 
 const sistema = new Sistem();
 module.exports.sistema = sistema;
 
 require("./server/passport-config.js");
-const app = express();
 const numSteps = 50000;
 const numTokens = 200;
 
