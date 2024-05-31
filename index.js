@@ -13,7 +13,7 @@ const cookieSession = require("cookie-session");
 const utils = require("./server/utils.js");
 const FormData = require("form-data");
 const path = require("path");
-const { time } = require("console");
+const { Storage } = require('@google-cloud/storage');
 
 const app = express();
 app.use(cors());
@@ -50,6 +50,9 @@ function generateSessionId() {
     return id;
 }
 
+const storage = new Storage();
+const bucketName = process.env.BUCKET_NAME || 'img-back';
+
 app.use(express.static(__dirname + "/"));
 
 //Autenticación
@@ -58,6 +61,16 @@ app.use(passport.session());
 
 app.get("/ping", function (req, res) {
     res.send("pong");
+});
+
+app.get("/image", function(req, res) {
+    const bucket = storage.bucket(bucketName);
+    const file = bucket.file("imgVias/A1A2.jpg");
+    file.download().then((data) => {
+        res.send(data[0]);
+    }).catch((err) => {
+        res.send(err);
+    });
 });
 
 app.post(
