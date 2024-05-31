@@ -392,7 +392,7 @@ app.get("/iniciarEvaluacion/:id", utils.rolEvaluador, (req, res) => {
             let tiempo = new Date().getTime();
             fs.mkdirSync(`img/eval/eval_${tiempo}`);
             let tr = [];
-            eval = { time: tiempo, evaluacion: {} };
+            eval = { time: tiempo, evaluacion: {}, finalizada: false};
             transiciones.transiciones.forEach((transicion) => {
                 tr.push(transicion.id);
                 eval.evaluacion["info4" + transicion.id] = {
@@ -403,7 +403,7 @@ app.get("/iniciarEvaluacion/:id", utils.rolEvaluador, (req, res) => {
                     gpt: {
                         flood: null,
                         objects: null,
-                    },
+                    }
                 };
             });
             sistema.guardarEvaluacion(eval, function (error, result) {
@@ -432,6 +432,13 @@ app.get("/iniciarEvaluacion/:id", utils.rolEvaluador, (req, res) => {
 
 app.post("/evaluarTransicion", utils.rolEvaluador, (req, res) => {
     sistema.evaluarTransicion(req.body, function (error, result) {
+        res.send({ error: error, result: result });
+    });
+});
+
+app.get("/evaluacionRes/:id", utils.rolEvaluador, (req, res) => {
+    console.log("p")
+    sistema.obtenerEvaluacion(req.params.id, function (error, result) {
         res.send({ error: error, result: result });
     });
 });

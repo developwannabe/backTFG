@@ -114,7 +114,6 @@ class Sistem {
     };
 
     evaluarTransicionT = function (datos, callback) {
-        console.log("oaijsdo")
         let datosI = [];
         datosI.push({ time: parseInt(datos.id) });
         datosI.push({
