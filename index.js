@@ -13,7 +13,6 @@ const cookieSession = require("cookie-session");
 const utils = require("./server/utils.js");
 const FormData = require("form-data");
 const path = require("path");
-const { Storage } = require('@google-cloud/storage');
 
 const app = express();
 app.use(cors());
@@ -27,7 +26,6 @@ const numTokens = 200;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
 
 app.use(
     cookieSession({
@@ -50,9 +48,6 @@ function generateSessionId() {
     return id;
 }
 
-const storage = new Storage();
-const bucketName = process.env.BUCKET_NAME || 'img-back';
-
 app.use(express.static(__dirname + "/"));
 
 //Autenticación
@@ -63,13 +58,9 @@ app.get("/ping", function (req, res) {
     res.send("pong");
 });
 
-app.get("/image", function(req, res) {
-    const bucket = storage.bucket(bucketName);
-    const file = bucket.file("imgVias/A1A2.jpg");
-    file.download().then((data) => {
-        res.send(data[0]);
-    }).catch((err) => {
-        res.send(err);
+app.get("/image/:type/:img", (req, res) => {
+    utils.obtenerImagen(req.params.type + "/" + req.params.img, function (data) {
+        res.send(data);
     });
 });
 
@@ -478,7 +469,7 @@ app.get(
 
             if (fs.existsSync(filePath)) {
                 sistema.buscarGPT(
-                    "1716999083898",
+                    req.params.idEval,
                     req.params.transicion,
                     function (result) {
                         sistema.obtenerEvaluacion(
@@ -503,53 +494,46 @@ app.get(
             }
 
             try {
-                let form = new FormData();
-                form.append(
-                    "file",
-                    fs.createReadStream(
-                        path.join(
-                            __dirname,
-                            "img",
-                            `${req.params.transicion}.jpg`
-                        )
-                    )
-                );
-                const gpt = await axios.post(
-                    GPT,
-                    { lugares: [req.params.transicion] },
-                    { headers: { Authorization: "Bearer " + GPT_TOKEN } }
-                );
-                sistema.insertarGPT(
-                    req.params.idEval,
-                    req.params.transicion,
-                    gpt.data[req.params.transicion],
-                    async function () {
-                        const response = await axios.post(YOLO, form, {
-                            headers: form.getHeaders(),
-                            responseType: "arraybuffer",
-                        });
-
-                        if (!fs.existsSync(dirPath)) {
-                            fs.mkdirSync(dirPath, { recursive: true });
+                utils.obtenerImagen("imgVias/"+req.params.transicion+".jpg", async function(img){
+                    let form = new FormData();
+                    form.append(
+                        "file",
+                        img,
+                        req.params.transicion+".png"
+                    );
+                    const gpt = await axios.post(
+                        GPT,
+                        { lugares: [req.params.transicion] },
+                        { headers: { Authorization: "Bearer " + GPT_TOKEN } }
+                    );
+                    sistema.insertarGPT(
+                        req.params.idEval,
+                        req.params.transicion,
+                        gpt.data[req.params.transicion],
+                        async function () {
+                            const response = await axios.post(YOLO, form, {
+                                headers: form.getHeaders(),
+                                responseType: "arraybuffer",
+                            });
+    
+                            utils.guardarImagen(
+                                "imgEval/eval_" +
+                                    req.params.idEval +
+                                    "/" +
+                                    req.params.transicion +
+                                    ".png",
+                                response.data,
+                                function (result) {
+                                    res.send({
+                                        status: true,
+                                        GPT: gpt.data[req.params.transicion],
+                                    });
+                                }
+                            );
                         }
-                        fs.writeFile(filePath, response.data, (err) => {
-                            if (err) {
-                                console.error(
-                                    "Error al escribir el archivo:",
-                                    err
-                                );
-                                res.status(500).send({
-                                    error: "Error al escribir el archivo",
-                                });
-                            } else {
-                                res.send({
-                                    status: true,
-                                    GPT: gpt.data[req.params.transicion],
-                                });
-                            }
-                        });
-                    }
-                );
+                    );
+                })
+                
             } catch (error) {
                 console.log(error);
                 res.status(500).send({ error: error.message });

@@ -1,5 +1,8 @@
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
+const { Storage } = require('@google-cloud/storage');
+
+const storage = new Storage();
 
 const crearToken = function (email, rol) {
     const token = jwt.sign({ "email": email, "rol": rol }, process.env.JWTSECRET, {
@@ -19,6 +22,27 @@ const comprobarDatos = function (req, res, next) {
         res.send({ error: -2 });
     }
 };
+
+const obtenerImagen = function(ruta,callback){
+    const bucket = storage.bucket("img-back");
+    const file = bucket.file(ruta);
+    file.download().then((data) => {
+        callback(data[0]);
+    }).catch((err) => {
+        callback(null);
+    });
+}
+
+const guardarImagen = function(ruta,imagen,callback){
+    const bucket = storage.bucket("img-back");
+    const file = bucket.file(ruta);
+    file.save(imagen).then(() => {
+        callback(true);
+    }).catch((err) => {
+        console.log(err);
+        callback(false);
+    });
+}
 
 const regexEmail = function(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -73,5 +97,7 @@ module.exports = {
     rolAdmin,
     rolEvaluador,
     rolUsuario,
-    regexEmail
+    regexEmail,
+    obtenerImagen,
+    guardarImagen
 };
