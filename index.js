@@ -59,9 +59,21 @@ app.get("/ping", function (req, res) {
 });
 
 app.get("/image/:type/:img", (req, res) => {
-    utils.obtenerImagen(req.params.type + "/" + req.params.img, function (data) {
-        res.send(data);
-    });
+    utils.obtenerImagen(
+        req.params.type + "/" + req.params.img,
+        function (data) {
+            res.send(data);
+        }
+    );
+});
+
+app.get("/image/:type/:idSession/:img", (req, res) => {
+    utils.obtenerImagen(
+        req.params.type + "/eval_" + req.params.idSession + "/" + req.params.img,
+        function (data) {
+            res.send(data);
+        }
+    );
 });
 
 app.post(
@@ -392,12 +404,11 @@ app.post("/transiciones", utils.rolEvaluador, (req, res) => {
 
 app.get("/iniciarEvaluacion/:id", utils.rolEvaluador, (req, res) => {
     if (
-        req.params.id == 0 ||
-        !fs.existsSync(`img/eval/eval_${req.params.id}`)
+        req.params.id == 0 //||
+        //!fs.existsSync(`img/eval/eval_${req.params.id}`)
     ) {
         sistema.obtenerTransiciones(function (error, transiciones) {
             let tiempo = new Date().getTime();
-            fs.mkdirSync(`img/eval/eval_${tiempo}`);
             let tr = [];
             eval = {
                 time: tiempo,
@@ -494,46 +505,54 @@ app.get(
             }
 
             try {
-                utils.obtenerImagen("imgVias/"+req.params.transicion+".jpg", async function(img){
-                    let form = new FormData();
-                    form.append(
-                        "file",
-                        img,
-                        req.params.transicion+".png"
-                    );
-                    const gpt = await axios.post(
-                        GPT,
-                        { lugares: [req.params.transicion] },
-                        { headers: { Authorization: "Bearer " + GPT_TOKEN } }
-                    );
-                    sistema.insertarGPT(
-                        req.params.idEval,
-                        req.params.transicion,
-                        gpt.data[req.params.transicion],
-                        async function () {
-                            const response = await axios.post(YOLO, form, {
-                                headers: form.getHeaders(),
-                                responseType: "arraybuffer",
-                            });
-    
-                            utils.guardarImagen(
-                                "imgEval/eval_" +
-                                    req.params.idEval +
-                                    "/" +
-                                    req.params.transicion +
-                                    ".png",
-                                response.data,
-                                function (result) {
-                                    res.send({
-                                        status: true,
-                                        GPT: gpt.data[req.params.transicion],
-                                    });
-                                }
-                            );
-                        }
-                    );
-                })
-                
+                utils.obtenerImagen(
+                    "imgVias/" + req.params.transicion + ".jpg",
+                    async function (img) {
+                        let form = new FormData();
+                        form.append(
+                            "file",
+                            img,
+                            req.params.transicion + ".png"
+                        );
+                        const gpt = await axios.post(
+                            GPT,
+                            { lugares: [req.params.transicion] },
+                            {
+                                headers: {
+                                    Authorization: "Bearer " + GPT_TOKEN,
+                                },
+                            }
+                        );
+                        sistema.insertarGPT(
+                            req.params.idEval,
+                            req.params.transicion,
+                            gpt.data[req.params.transicion],
+                            async function () {
+                                const response = await axios.post(YOLO, form, {
+                                    headers: form.getHeaders(),
+                                    responseType: "arraybuffer",
+                                });
+
+                                utils.guardarImagen(
+                                    "imgEval/eval_" +
+                                        req.params.idEval +
+                                        "/" +
+                                        req.params.transicion +
+                                        ".png",
+                                    response.data,
+                                    function (result) {
+                                        res.send({
+                                            status: true,
+                                            GPT: gpt.data[
+                                                req.params.transicion
+                                            ],
+                                        });
+                                    }
+                                );
+                            }
+                        );
+                    }
+                );
             } catch (error) {
                 console.log(error);
                 res.status(500).send({ error: error.message });
