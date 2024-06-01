@@ -15,7 +15,7 @@ const FormData = require("form-data");
 const path = require("path");
 
 const app = express();
-app.use(cors());
+app.use(cors('*'));
 
 const sistema = new Sistem();
 module.exports.sistema = sistema;
