@@ -147,9 +147,8 @@ app.patch("/usuario", utils.rolAdmin, (req, res) => {
     });
 });
 
-app.get("/fisTransiciones/:idSession", utils.rolEvaluador, (req, res) => {
+app.get("/fisTransiciones/:idSession", utils.rolEvaluador, async (req, res) => {
     let pet = {};
-    let respt = {};
     sistema.obtenerEvaluacion(
         req.params.idSession,
         async function (error, eval) {
@@ -176,10 +175,12 @@ app.get("/fisTransiciones/:idSession", utils.rolEvaluador, (req, res) => {
                             req.params.idSession,
                             Math.round(resp.data[keys[i]]),
                             function () {
+                                console.log("Time: ", req.params.idSession);
                                 if (i == keys.length - 1) {
                                     sistema.obtenerEvaluacion(
                                         req.params.idSession,
                                         function (error, eval) {
+                                            console.log(eval.time);
                                             res.send(eval);
                                         }
                                     );
@@ -407,7 +408,7 @@ app.post("/transiciones", utils.rolEvaluador, (req, res) => {
 });
 
 app.get("/iniciarEvaluacion/:id", utils.rolEvaluador, (req, res) => {
-    if (req.params.id == 0) {
+    if (req.params.id == "0") {
         sistema.obtenerTransiciones(function (error, transiciones) {
             let tiempo = new Date().getTime();
             let tr = [];
@@ -437,7 +438,7 @@ app.get("/iniciarEvaluacion/:id", utils.rolEvaluador, (req, res) => {
                 });
             });
         });
-    } else {
+    } else {//TODO:ARREGLAR
         sistema.obtenerEvaluacion(req.params.id, function (error, result) {
             if (error || result == null) {
                 res.send({ error: error });

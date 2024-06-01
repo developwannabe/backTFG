@@ -57,7 +57,8 @@ class Cad {
     }
 
     buscarEvaluacion = function (datos, callback){
-        this.db.buscarUno("evaluaciones", {}, { sort: { "time" : -1 } }, callback);
+        console.log(datos);
+        this.db.buscarUno("evaluaciones", datos, {}, callback);
     }
 
     ultimaEvaluacion = function (callback) {

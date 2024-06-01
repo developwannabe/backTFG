@@ -95,7 +95,7 @@ class Sistem {
     };
 
     obtenerEvaluacion = function (idEval, callback) {
-        this.cad.buscarEvaluacion({ time: idEval }, function (error, result) {
+        this.cad.buscarEvaluacion({ time: parseInt(idEval) }, function (error, result) {
             if (error) {
                 callback(error, null);
                 return;
@@ -187,7 +187,6 @@ class Sistem {
                 callback(error, null);
                 return;
             }
-            console.log(result);
             callback(null, {
                 nombre: result[0].name,
                 apellidos: result[0].surname,
@@ -243,7 +242,7 @@ class Sistem {
     };
 
     buscarGPT = function (idEval, transicion, callback) {
-        this.cad.buscarEvaluacion({ time: idEval }, function (error, result) {
+        this.cad.buscarEvaluacion({ time: parseInt(idEval) }, function (error, result) {
             callback(result.evaluacion[`info4${transicion}`].gpt);
         });
     };
