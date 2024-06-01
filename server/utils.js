@@ -44,6 +44,16 @@ const guardarImagen = function(ruta,imagen,callback){
     });
 }
 
+const existeImagen = function(ruta,callback){
+    const bucket = storage.bucket("img-back");
+    const file = bucket.file(ruta);
+    file.exists().then((data) => {
+        callback(data[0]);
+    }).catch((err) => {
+        callback(false);
+    });
+}
+
 const regexEmail = function(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -99,5 +109,6 @@ module.exports = {
     rolUsuario,
     regexEmail,
     obtenerImagen,
-    guardarImagen
+    guardarImagen,
+    existeImagen
 };

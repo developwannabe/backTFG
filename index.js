@@ -69,7 +69,11 @@ app.get("/image/:type/:img", (req, res) => {
 
 app.get("/image/:type/:idSession/:img", (req, res) => {
     utils.obtenerImagen(
-        req.params.type + "/eval_" + req.params.idSession + "/" + req.params.img,
+        req.params.type +
+            "/eval_" +
+            req.params.idSession +
+            "/" +
+            req.params.img,
         function (data) {
             res.send(data);
         }
@@ -403,10 +407,7 @@ app.post("/transiciones", utils.rolEvaluador, (req, res) => {
 });
 
 app.get("/iniciarEvaluacion/:id", utils.rolEvaluador, (req, res) => {
-    if (
-        req.params.id == 0 //||
-        //!fs.existsSync(`img/eval/eval_${req.params.id}`)
-    ) {
+    if (req.params.id == 0) {
         sistema.obtenerTransiciones(function (error, transiciones) {
             let tiempo = new Date().getTime();
             let tr = [];
@@ -470,93 +471,94 @@ app.get(
     utils.rolEvaluador,
     async (req, res) => {
         if (req.params.transicion) {
-            const dirPath = path.join(
-                __dirname,
-                "img",
-                "eval",
-                `eval_${req.params.idEval}`
-            );
-            const filePath = path.join(dirPath, `${req.params.transicion}.png`);
-
-            if (fs.existsSync(filePath)) {
-                sistema.buscarGPT(
-                    req.params.idEval,
-                    req.params.transicion,
-                    function (result) {
-                        sistema.obtenerEvaluacion(
-                            req.params.idEval,
-                            function (error, eval) {
-                                res.send({
-                                    status: true,
-                                    GPT: result,
-                                    flood: eval.evaluacion[
-                                        "info4" + req.params.transicion
-                                    ].flood,
-                                    objects:
-                                        eval.evaluacion[
-                                            "info4" + req.params.transicion
-                                        ].objects,
-                                });
-                            }
-                        );
-                    }
-                );
-                return;
-            }
-
-            try {
-                utils.obtenerImagen(
-                    "imgVias/" + req.params.transicion + ".jpg",
-                    async function (img) {
-                        let form = new FormData();
-                        form.append(
-                            "file",
-                            img,
-                            req.params.transicion + ".png"
-                        );
-                        const gpt = await axios.post(
-                            GPT,
-                            { lugares: [req.params.transicion] },
-                            {
-                                headers: {
-                                    Authorization: "Bearer " + GPT_TOKEN,
-                                },
-                            }
-                        );
-                        sistema.insertarGPT(
+            utils.existeImagen(
+                "imgEval/eval_" +
+                    req.params.idEval +
+                    "/" +
+                    req.params.transicion +
+                    ".png",
+                function (existe) {
+                    if (existe) {
+                        sistema.buscarGPT(
                             req.params.idEval,
                             req.params.transicion,
-                            gpt.data[req.params.transicion],
-                            async function () {
-                                const response = await axios.post(YOLO, form, {
-                                    headers: form.getHeaders(),
-                                    responseType: "arraybuffer",
-                                });
-
-                                utils.guardarImagen(
-                                    "imgEval/eval_" +
-                                        req.params.idEval +
-                                        "/" +
-                                        req.params.transicion +
-                                        ".png",
-                                    response.data,
-                                    function (result) {
+                            function (result) {
+                                sistema.obtenerEvaluacion(
+                                    req.params.idEval,
+                                    function (error, eval) {
                                         res.send({
                                             status: true,
-                                            GPT: gpt.data[
-                                                req.params.transicion
-                                            ],
+                                            GPT: result,
+                                            flood: eval.evaluacion[
+                                                "info4" + req.params.transicion
+                                            ].flood,
+                                            objects:
+                                                eval.evaluacion[
+                                                    "info4" + req.params.transicion
+                                                ].objects,
                                         });
                                     }
                                 );
                             }
                         );
+                        return;
                     }
-                );
-            } catch (error) {
-                console.log(error);
-                res.status(500).send({ error: error.message });
-            }
+        
+                    try {
+                        utils.obtenerImagen(
+                            "imgVias/" + req.params.transicion + ".jpg",
+                            async function (img) {
+                                let form = new FormData();
+                                form.append(
+                                    "file",
+                                    img,
+                                    req.params.transicion + ".jpg"
+                                );
+                                const gpt = await axios.post(
+                                    GPT,
+                                    { lugares: [req.params.transicion] },
+                                    {
+                                        headers: {
+                                            Authorization: "Bearer " + GPT_TOKEN,
+                                        },
+                                    }
+                                );
+                                sistema.insertarGPT(
+                                    req.params.idEval,
+                                    req.params.transicion,
+                                    gpt.data[req.params.transicion],
+                                    async function () {
+                                        const response = await axios.post(YOLO, form, {
+                                            headers: form.getHeaders(),
+                                            responseType: "arraybuffer",
+                                        });
+        
+                                        utils.guardarImagen(
+                                            "imgEval/eval_" +
+                                                req.params.idEval +
+                                                "/" +
+                                                req.params.transicion +
+                                                ".png",
+                                            response.data,
+                                            function (result) {
+                                                res.send({
+                                                    status: true,
+                                                    GPT: gpt.data[
+                                                        req.params.transicion
+                                                    ],
+                                                });
+                                            }
+                                        );
+                                    }
+                                );
+                            }
+                        );
+                    } catch (error) {
+                        console.log(error);
+                        res.status(500).send({ error: error.message });
+                    }
+                });
+            
         } else {
             res.status(400).send({ error: "Transición no especificada" });
         }
