@@ -95,11 +95,9 @@ class Sistem {
     };
 
     obtenerEvaluacion = function (idEval, callback) {
-        console.log(idEval);
         this.cad.buscarEvaluacion(
             { time: parseInt(idEval) },
             function (error, result) {
-                console.log(result);
                 if (error) {
                     callback(error, null);
                     return;
@@ -108,6 +106,17 @@ class Sistem {
             }
         );
     };
+
+    obtenerEvaluaciones = function(callback){
+        let filtro = {finalizada: true};
+        this.cad.obtenerEvaluaciones(filtro,function(error, result){
+            if(error){
+                callback(error, null);
+                return;
+            }
+            callback(null, result);
+        });
+    }
 
     insertarFIS = function (transicion, idEval, fis, callback) {
         let datos = [];
@@ -135,7 +144,6 @@ class Sistem {
 
     finalizarEvaluacion = function (datos, callback) {
         let datosI = [];
-        console.log(datos);
         datosI.push({ time: parseInt(datos) });
         datosI.push({
             $set: {

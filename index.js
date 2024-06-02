@@ -181,12 +181,10 @@ app.get("/fisTransiciones/:idSession", utils.rolEvaluador, async (req, res) => {
                             req.params.idSession,
                             Math.round(resp.data[keys[i]]),
                             function () {
-                                console.log("Time: ", req.params.idSession);
                                 if (i == keys.length - 1) {
                                     sistema.obtenerEvaluacion(
                                         req.params.idSession,
                                         function (error, eval) {
-                                            console.log(eval.time);
                                             res.send(eval);
                                         }
                                     );
@@ -418,29 +416,32 @@ app.get("/iniciarEvaluacion/:id", utils.rolEvaluador, (req, res) => {
         sistema.obtenerTransiciones(function (error, transiciones) {
             let tiempo = new Date().getTime();
             let tr = [];
-            eval = {
-                time: tiempo,
-                evaluacion: {},
-                magnitude: parseInt(MAGNITUDE),
-                finalizada: false,
-            };
-            transiciones.transiciones.forEach((transicion) => {
-                tr.push(transicion.id);
-                eval.evaluacion["info4" + transicion.id] = {
-                    flood: null,
-                    objects: null,
-                    fis: null,
-                    gpt: {
+            utils.obtenerUser(req, function (user) {
+                eval = {
+                    time: tiempo,
+                    user: user,
+                    evaluacion: {},
+                    magnitude: parseInt(MAGNITUDE),
+                    finalizada: false,
+                };
+                transiciones.transiciones.forEach((transicion) => {
+                    tr.push(transicion.id);
+                    eval.evaluacion["info4" + transicion.id] = {
                         flood: null,
                         objects: null,
-                    },
-                };
-            });
-            sistema.guardarEvaluacion(eval, function (error, result) {
-                res.send({
-                    id: tiempo,
-                    transiciones: tr,
-                    magnitude: parseInt(MAGNITUDE),
+                        fis: null,
+                        gpt: {
+                            flood: null,
+                            objects: null,
+                        },
+                    };
+                });
+                sistema.guardarEvaluacion(eval, function (error, result) {
+                    res.send({
+                        id: tiempo,
+                        transiciones: tr,
+                        magnitude: parseInt(MAGNITUDE),
+                    });
                 });
             });
         });
@@ -516,7 +517,6 @@ app.get(
                             "imgVias/" + req.params.transicion + ".jpg",
                             async function (img) {
                                 let form = new FormData();
-                                console.log(img, req.params.transicion);
                                 form.append(
                                     "file",
                                     img,

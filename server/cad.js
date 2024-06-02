@@ -44,6 +44,10 @@ class Cad {
         this.db.eliminar("usuarios", datos, callback);
     };
 
+    obtenerEvaluaciones = function(filtro,callback){
+        this.db.buscar("evaluaciones",filtro,callback);
+    }
+
     insertarEvaluacion = function (datos, callback) {
         this.db.insertar("evaluaciones", datos, callback);
     };
@@ -57,7 +61,6 @@ class Cad {
     };
 
     buscarEvaluacion = function (datos, callback) {
-        console.log(datos);
         this.db.buscarUno("evaluaciones", datos, {}, callback);
     };
 

@@ -77,6 +77,16 @@ const comprobarRol = function(req,rol) {
     }
 }
 
+const obtenerUser = function(req,callback){
+    const bearerToken = req.headers.authorization;
+    if (!bearerToken || !bearerToken.startsWith("Bearer ")) {
+        return null;
+    }
+    const token = bearerToken.split(" ")[1];
+    const payload = extraerPayload(token);
+    callback(payload.email);
+}
+
 const rolAdmin = function(req, res, next) {
     if(comprobarRol(req, "admin")){
         next();
@@ -110,5 +120,6 @@ module.exports = {
     regexEmail,
     obtenerImagen,
     guardarImagen,
-    existeImagen
+    existeImagen,
+    obtenerUser
 };
