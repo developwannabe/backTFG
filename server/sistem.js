@@ -114,7 +114,14 @@ class Sistem {
                 callback(error, null);
                 return;
             }
-            callback(null, result);
+            let resp = [];
+            for(let i = 0; i < result.length; i++){
+                resp.push({
+                    id: result[i].time,
+                    evaluador: result[i].user,
+                });
+            }
+            callback(null, resp);
         });
     }
 
