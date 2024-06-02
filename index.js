@@ -16,7 +16,7 @@ const path = require("path");
 
 const app = express();
 app.use(cors());
-  
+
 const sistema = new Sistem();
 module.exports.sistema = sistema;
 
@@ -144,6 +144,12 @@ app.patch("/usuario", utils.rolAdmin, (req, res) => {
             return;
         }
         res.send(result);
+    });
+});
+
+app.get("/evaluaciones", utils.rolEvaluador, (req, res) => {
+    sistema.obtenerEvaluaciones(function (error, result) {
+        res.send({ error: error, evaluaciones: result });
     });
 });
 
@@ -438,7 +444,7 @@ app.get("/iniciarEvaluacion/:id", utils.rolEvaluador, (req, res) => {
                 });
             });
         });
-    } else {//TODO:ARREGLAR
+    } else {
         sistema.obtenerEvaluacion(req.params.id, function (error, result) {
             if (error || result == null) {
                 res.send({ error: error });
@@ -461,7 +467,6 @@ app.post("/evaluarTransicion", utils.rolEvaluador, (req, res) => {
 });
 
 app.get("/evaluacionRes/:id", utils.rolEvaluador, (req, res) => {
-    console.log("p");
     sistema.obtenerEvaluacion(req.params.id, function (error, result) {
         res.send({ error: error, result: result });
     });
@@ -495,7 +500,8 @@ app.get(
                                             ].flood,
                                             objects:
                                                 eval.evaluacion[
-                                                    "info4" + req.params.transicion
+                                                    "info4" +
+                                                        req.params.transicion
                                                 ].objects,
                                         });
                                     }
@@ -504,12 +510,13 @@ app.get(
                         );
                         return;
                     }
-        
+
                     try {
                         utils.obtenerImagen(
                             "imgVias/" + req.params.transicion + ".jpg",
                             async function (img) {
                                 let form = new FormData();
+                                console.log(img, req.params.transicion);
                                 form.append(
                                     "file",
                                     img,
@@ -520,7 +527,8 @@ app.get(
                                     { lugares: [req.params.transicion] },
                                     {
                                         headers: {
-                                            Authorization: "Bearer " + GPT_TOKEN,
+                                            Authorization:
+                                                "Bearer " + GPT_TOKEN,
                                         },
                                     }
                                 );
@@ -529,11 +537,15 @@ app.get(
                                     req.params.transicion,
                                     gpt.data[req.params.transicion],
                                     async function () {
-                                        const response = await axios.post(YOLO, form, {
-                                            headers: form.getHeaders(),
-                                            responseType: "arraybuffer",
-                                        });
-        
+                                        const response = await axios.post(
+                                            YOLO,
+                                            form,
+                                            {
+                                                headers: form.getHeaders(),
+                                                responseType: "arraybuffer",
+                                            }
+                                        );
+
                                         utils.guardarImagen(
                                             "imgEval/eval_" +
                                                 req.params.idEval +
@@ -558,8 +570,8 @@ app.get(
                         console.log(error);
                         res.status(500).send({ error: error.message });
                     }
-                });
-            
+                }
+            );
         } else {
             res.status(400).send({ error: "Transición no especificada" });
         }

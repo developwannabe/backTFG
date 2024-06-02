@@ -95,13 +95,18 @@ class Sistem {
     };
 
     obtenerEvaluacion = function (idEval, callback) {
-        this.cad.buscarEvaluacion({ time: parseInt(idEval) }, function (error, result) {
-            if (error) {
-                callback(error, null);
-                return;
+        console.log(idEval);
+        this.cad.buscarEvaluacion(
+            { time: parseInt(idEval) },
+            function (error, result) {
+                console.log(result);
+                if (error) {
+                    callback(error, null);
+                    return;
+                }
+                callback(null, result);
             }
-            callback(null, result);
-        });
+        );
     };
 
     insertarFIS = function (transicion, idEval, fis, callback) {
@@ -118,26 +123,29 @@ class Sistem {
         datosI.push({ time: parseInt(datos.id) });
         datosI.push({
             $set: {
-                [`evaluacion.info4${datos.trn}.transitabilidad`]: parseInt(datos.val),
+                [`evaluacion.info4${datos.trn}.transitabilidad`]: parseInt(
+                    datos.val
+                ),
             },
         });
-        this.cad.evaluarTransicion(datosI, function(error, result){
+        this.cad.evaluarTransicion(datosI, function (error, result) {
             callback();
         });
     };
 
-    finalizarEvaluacion = function(datos,callback){
+    finalizarEvaluacion = function (datos, callback) {
         let datosI = [];
-        datosI.push({ time: parseInt(datos.id) });
+        console.log(datos);
+        datosI.push({ time: parseInt(datos) });
         datosI.push({
             $set: {
-                [`evaluacion.info4${datos.trn}.finalizada`]: true,
+                [`finalizada`]: true,
             },
         });
-        this.cad.evaluarTransicion(datosI, function(error, result){
+        this.cad.evaluarTransicion(datosI, function (error, result) {
             callback();
         });
-    }
+    };
 
     obtenerTransiciones = function (callback) {
         this.cad.obtenerTransiciones(function (error, result) {
@@ -242,9 +250,12 @@ class Sistem {
     };
 
     buscarGPT = function (idEval, transicion, callback) {
-        this.cad.buscarEvaluacion({ time: parseInt(idEval) }, function (error, result) {
-            callback(result.evaluacion[`info4${transicion}`].gpt);
-        });
+        this.cad.buscarEvaluacion(
+            { time: parseInt(idEval) },
+            function (error, result) {
+                callback(result.evaluacion[`info4${transicion}`].gpt);
+            }
+        );
     };
 
     insertarGPT = function (idEval, transicion, gpt, callback) {

@@ -24,62 +24,67 @@ class Cad {
         this.db.buscar("usuarios", datos, callback);
     };
 
-    insertarGPT = function (datos, callback){
-        this.db.actualizar("evaluaciones",datos,callback);
-    }
+    insertarGPT = function (datos, callback) {
+        this.db.actualizar("evaluaciones", datos, callback);
+    };
 
-    insertarFIS = function (datos, callback){
-        this.db.actualizar("evaluaciones",datos,callback);
-    }
+    insertarFIS = function (datos, callback) {
+        this.db.actualizar("evaluaciones", datos, callback);
+    };
 
-    evaluarTransicion = function (datos, callback){
-        this.db.actualizar("evaluaciones",datos,callback);
-    }
+    evaluarTransicion = function (datos, callback) {
+        this.db.actualizar("evaluaciones", datos, callback);
+    };
 
     modificarUsuario = function (datos, callback) {
         this.db.actualizar("usuarios", datos, callback);
-    }
+    };
 
     eliminarUsuario = function (datos, callback) {
         this.db.eliminar("usuarios", datos, callback);
-    }
+    };
 
     insertarEvaluacion = function (datos, callback) {
         this.db.insertar("evaluaciones", datos, callback);
-    }
+    };
 
     insertarEval = function (datos, callback) {
         this.db.actualizar("evaluaciones", datos, callback);
-    }
+    };
 
     insertarTransiciones = function (datos, callback) {
         this.db.insertar("transiciones", datos, callback);
-    }
+    };
 
-    buscarEvaluacion = function (datos, callback){
+    buscarEvaluacion = function (datos, callback) {
         console.log(datos);
         this.db.buscarUno("evaluaciones", datos, {}, callback);
-    }
+    };
 
     ultimaEvaluacion = function (callback) {
-        this.db.buscarUno("evaluaciones", {}, { sort: { "time" : -1 } }, callback);
-    }
+        this.db.buscarUno("evaluaciones", {}, { sort: { time: -1 } }, callback);
+    };
 
     obtenerTransiciones = function (callback) {
-        this.db.buscarUno("transiciones", {}, { sort: { "time" : -1 } }, callback);
-    }
-    
-    buscarUsuarios = function(filtro, callback){
-        let input = filtro.input.replace(/a/gi, '[aá]').replace(/e/gi, '[eé]').replace(/i/gi, '[ií]').replace(/o/gi, '[oó]').replace(/u/gi, '[uú]');
+        this.db.buscarUno("transiciones", {}, { sort: { time: -1 } }, callback);
+    };
+
+    buscarUsuarios = function (filtro, callback) {
+        let input = filtro.input
+            .replace(/a/gi, "[aá]")
+            .replace(/e/gi, "[eé]")
+            .replace(/i/gi, "[ií]")
+            .replace(/o/gi, "[oó]")
+            .replace(/u/gi, "[uú]");
         let regexFiltro = {
             $or: [
-                { email: new RegExp(input, 'i') },
-                { name: new RegExp(input, 'i') },
-                { surname: new RegExp(input, 'i') }
-            ]
+                { email: new RegExp(input, "i") },
+                { name: new RegExp(input, "i") },
+                { surname: new RegExp(input, "i") },
+            ],
         };
         this.db.buscar("usuarios", regexFiltro, callback);
-    }
+    };
 }
 
 class BBDD {
@@ -94,8 +99,10 @@ class BBDD {
             await client.connect();
             this.db = client.db("sistema");
             this.colecciones["usuarios"] = this.db.collection("usuarios");
-            this.colecciones["evaluaciones"] = this.db.collection("evaluaciones");
-            this.colecciones["transiciones"] = this.db.collection("transiciones");
+            this.colecciones["evaluaciones"] =
+                this.db.collection("evaluaciones");
+            this.colecciones["transiciones"] =
+                this.db.collection("transiciones");
             callback();
         } catch (error) {
             console.error("Fallo al conectar con BBDD:", error);
@@ -123,13 +130,17 @@ class BBDD {
     };
 
     buscarUno = function (coleccion, datos, opciones, callback) {
-        this.colecciones[coleccion].findOne(datos, opciones, function (err, result) {
-            if (err) {
-                throw err;
-            } else {
-                callback(null, result);
+        this.colecciones[coleccion].findOne(
+            datos,
+            opciones,
+            function (err, result) {
+                if (err) {
+                    throw err;
+                } else {
+                    callback(null, result);
+                }
             }
-        });
+        );
     };
 
     eliminar = function (coleccion, datos, callback) {
