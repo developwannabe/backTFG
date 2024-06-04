@@ -126,6 +126,203 @@ app.post(
     }
 );
 
+app.get("/ruta/:origen/:destino", utils.rolUsuario, (req, respuestaF) => {
+    const filePath = "./nets/cadiz.cpn";
+
+    fs.readFile(filePath, (err, data) => {
+        if (err) {
+            console.error("Error al leer el archivo:", err);
+            return;
+        }
+        xml2js.parseString(data, (err, result) => {
+            let newJson = result;
+            if (err) {
+                console.error("Error al parsear el XML:", err);
+                return;
+            }
+            const tupla = "(A,B,C,D)";
+            let tup;
+            sistema.ultimaEvaluacion(function (err, eval) {
+                if (err) {
+                    console.error("Error al buscar la última evaluación:", err);
+                    return;
+                }
+                sistema.obtenerTransiciones(function (error, transiciones) {
+                    let trn = {};
+                    for (let i = 0; i < transiciones.transiciones.length; i++) {
+                        trn["info4" + transiciones.transiciones[i].id] =
+                            transiciones.transiciones[i].tiempo;
+                    }
+                    let trnN = Object.keys(eval.evaluacion);
+                    for (let i = 0; i < trnN.length; i++) {
+                        transicion = eval.evaluacion[trnN[i]];
+                        transitabilidad = transicion.transitabilidad;
+                        tup = tupla
+                            .replace("A", transicion.flood)
+                            .replace("B", transicion.objects)
+                            .replace(
+                                "C",
+                                transicion.transitabilidad < 3
+                                    ? 0
+                                    : transicion.transitabilidad >= 3 &&
+                                      transicion.transitabilidad < 7
+                                    ? 1
+                                    : 2
+                            )
+                            .replace("D", trn[trnN[i]]);
+                        newJson.workspaceElements.cpnet[0].globbox[0].block
+                            .find((x) => x.$.id === "ID1494615515")
+                            .ml.forEach((item) => {
+                                if (item._.includes(trnN[i] + "S")) {
+                                    item._ = item._.replace(trnN[i] + "S", tup);
+                                }
+                            });
+                    }
+                    if (req.params.origen == 11) {
+                        newJson.workspaceElements.cpnet[0].globbox[0].block
+                            .find((x) => x.$.id === "ID1494615515")
+                            .ml.forEach((item) => {
+                                if (
+                                    item._.includes(
+                                        'val I111 =0`(6,2,[(11,"o")],0) ;'
+                                    )
+                                ) {
+                                    item._ = item._.replace(
+                                        'val I111 =0`(6,2,[(11,"o")],0) ;',
+                                        "val I111 =" +
+                                            numTokens +
+                                            "`(" +
+                                            req.params.destino +
+                                            `,2,[(11,"o")],0) ;`
+                                    );
+                                }
+                            });
+                    } else if (req.params.origen == 12) {
+                        newJson.workspaceElements.cpnet[0].globbox[0].block
+                            .find((x) => x.$.id === "ID1494615515")
+                            .ml.forEach((item) => {
+                                if (
+                                    item._.includes(
+                                        'val I127=0`(6,2,[(12,"o")],0) ;'
+                                    )
+                                ) {
+                                    item._ = item._.replace(
+                                        'val I127=0`(6,2,[(12,"o")],0) ;',
+                                        "val I127 =" +
+                                            numTokens +
+                                            "`(" +
+                                            req.params.destino +
+                                            ',1,[(12,"o")],0) ;'
+                                    );
+                                }
+                            });
+                    }
+                    const builder = new xml2js.Builder({
+                        headless: true,
+                        renderOpts: {
+                            pretty: true,
+                            indent: " ",
+                            newline: "\n",
+                        },
+                    });
+                    let cpnXml = builder.buildObject(newJson);
+                    cpnXml = xmlBeautifier(cpnXml);
+                    fs.writeFileSync("./nets/cpn.cpn", cpnXml);
+                    let body = {
+                        complex_verify: true,
+                        need_sim_restart: true,
+                        xml: cpnXml,
+                    };
+                    let config = {
+                        headers: { "X-SessionId": generateSessionId() },
+                    };
+                    axios
+                        .post(simulatorHost + "/api/v2/cpn/init", body, config)
+                        .then((res) => {
+                            body = {
+                                options: {
+                                    fair_be: "false",
+                                    global_fairness: "false",
+                                },
+                            };
+                            axios
+                                .post(
+                                    simulatorHost + "/api/v2/cpn/sim/init",
+                                    body,
+                                    config
+                                )
+                                .then((res) => {
+                                    body = {
+                                        addStep: numSteps,
+                                        untilStep: 0,
+                                        untilTime: 0,
+                                        addTime: 0,
+                                        amount: numSteps,
+                                    };
+                                    axios
+                                        .post(
+                                            simulatorHost +
+                                                "/api/v2/cpn/sim/step_fast_forward",
+                                            body,
+                                            config
+                                        )
+                                        .then((respT) => {
+                                            xd = respT.data[
+                                                "tokensAndMark"
+                                            ].find(
+                                                (x) => x.id === "ID1497673622"
+                                            );
+                                            const match =
+                                                xd["marking"].match(
+                                                    /\[(.*?)\]/
+                                                );
+
+                                            if (match) {
+                                                const ruta = match[1];
+
+                                                const numeros =
+                                                    ruta.match(/\d+/g);
+
+                                                if (numeros) {
+                                                    const rutaFormateada =
+                                                        numeros.join("-");
+                                                    console.log(
+                                                        "Ruta formateada:",
+                                                        rutaFormateada
+                                                    );
+                                                } else {
+                                                    console.log(
+                                                        "No se encontraron números en la ruta."
+                                                    );
+                                                }
+                                            } else {
+                                                console.log(
+                                                    "No se encontró la ruta en el string proporcionado."
+                                                );
+                                            }
+                                            respuestaF.send(
+                                                respT.data[
+                                                    "tokensAndMark"
+                                                ].find(
+                                                    (x) =>
+                                                        x.id === "ID1497673622"
+                                                )
+                                            );
+                                        });
+                                });
+                        });
+                });
+            });
+        });
+    });
+});
+
+app.get("/lugares", utils.rolUsuario, (req, res) => {
+    sistema.obtenerLugares(function (error, result) {
+        res.send({ error: error, lugares: result });
+    });
+});
+
 app.get("/usuario/:email", utils.rolAdmin, (req, res) => {
     const email = req.params.email;
     sistema.buscarUsuario({ email: email }, function (error, result) {

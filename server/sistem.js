@@ -125,6 +125,17 @@ class Sistem {
         });
     }
 
+    obtenerLugares = function(callback){
+        this.cad.obtenerLugares(function(error, result){
+            if(error){
+                callback(error, null);
+                return;
+            }
+            console.log(result)
+            callback(null, result.lugares);
+        });
+    };
+
     insertarFIS = function (transicion, idEval, fis, callback) {
         let datos = [];
         datos.push({ time: parseInt(idEval) });

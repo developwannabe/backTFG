@@ -44,9 +44,9 @@ class Cad {
         this.db.eliminar("usuarios", datos, callback);
     };
 
-    obtenerEvaluaciones = function(filtro,callback){
-        this.db.buscar("evaluaciones",filtro,callback);
-    }
+    obtenerEvaluaciones = function (filtro, callback) {
+        this.db.buscar("evaluaciones", filtro, callback);
+    };
 
     insertarEvaluacion = function (datos, callback) {
         this.db.insertar("evaluaciones", datos, callback);
@@ -62,6 +62,10 @@ class Cad {
 
     buscarEvaluacion = function (datos, callback) {
         this.db.buscarUno("evaluaciones", datos, {}, callback);
+    };
+
+    obtenerLugares = function (callback) {
+        this.db.buscarUno("lugares", {}, { sort: { time: -1 } }, callback);
     };
 
     ultimaEvaluacion = function (callback) {
@@ -106,6 +110,7 @@ class BBDD {
                 this.db.collection("evaluaciones");
             this.colecciones["transiciones"] =
                 this.db.collection("transiciones");
+            this.colecciones["lugares"] = this.db.collection("lugares");
             callback();
         } catch (error) {
             console.error("Fallo al conectar con BBDD:", error);

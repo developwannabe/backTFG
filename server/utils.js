@@ -70,6 +70,7 @@ const comprobarRol = function(req,rol) {
     }
     const token = bearerToken.split(" ")[1];
     const payload = extraerPayload(token);
+    console.log(payload.rol)
     if (payload.rol === rol) {
         return true;
     } else {
@@ -104,7 +105,7 @@ const rolEvaluador = function(req, res, next) {
 }
 
 const rolUsuario = function(req, res, next) {
-    if(comprobarRol(req, "usuario")){
+    if(comprobarRol(req, "personal")){
         next();
         return;
     }
