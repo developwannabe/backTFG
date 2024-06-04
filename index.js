@@ -42,6 +42,7 @@ const YOLO = process.env.YOLO_URL;
 const GPT = process.env.GPT_URL;
 const GPT_TOKEN = process.env.GPT_TOKEN;
 const MAGNITUDE = process.env.MAGNITUDE;
+const MAPS = process.env.MAPS_URL;
 
 function generateSessionId() {
     const id = "CPN_IDE_SESSION_" + new Date().getTime();
@@ -290,24 +291,32 @@ app.get("/ruta/:origen/:destino", utils.rolUsuario, (req, respuestaF) => {
                                                         "Ruta formateada:",
                                                         rutaFormateada
                                                     );
-                                                } else {
-                                                    console.log(
-                                                        "No se encontraron números en la ruta."
-                                                    );
+                                                    let body = {
+                                                        ruta: rutaFormateada,
+                                                    };
+                                                    let headers = {
+                                                        headers: {
+                                                            Authorization:
+                                                                "Bearer " +
+                                                                GPT_TOKEN,
+                                                        },
+                                                    };
+                                                    axios
+                                                        .post(
+                                                            MAPS,
+                                                            body,
+                                                            headers
+                                                        )
+                                                        .then((mapa) => {
+                                                            respuestaF.send(
+                                                                mapa.data
+                                                            );
+                                                        });
+
+                                                    return;
                                                 }
-                                            } else {
-                                                console.log(
-                                                    "No se encontró la ruta en el string proporcionado."
-                                                );
                                             }
-                                            respuestaF.send(
-                                                respT.data[
-                                                    "tokensAndMark"
-                                                ].find(
-                                                    (x) =>
-                                                        x.id === "ID1497673622"
-                                                )
-                                            );
+                                            respuestaF.send({ ruta: -1 });
                                         });
                                 });
                         });

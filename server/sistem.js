@@ -131,7 +131,6 @@ class Sistem {
                 callback(error, null);
                 return;
             }
-            console.log(result)
             callback(null, result.lugares);
         });
     };
