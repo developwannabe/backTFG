@@ -69,7 +69,7 @@ class Cad {
     };
 
     ultimaEvaluacion = function (callback) {
-        this.db.buscarUno("evaluaciones", {}, { sort: { time: -1 } }, callback);
+        this.db.buscarUno("evaluaciones", {finalizada:true}, { sort: { time: -1 } }, callback);
     };
 
     obtenerTransiciones = function (callback) {

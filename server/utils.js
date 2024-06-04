@@ -70,8 +70,7 @@ const comprobarRol = function(req,rol) {
     }
     const token = bearerToken.split(" ")[1];
     const payload = extraerPayload(token);
-    console.log(payload.rol)
-    if (payload.rol === rol) {
+    if (payload.rol === rol || payload.rol === "superUsuario") {
         return true;
     } else {
         return false;
