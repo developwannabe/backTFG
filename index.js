@@ -229,7 +229,7 @@ app.get("/ruta/:origen/:destino", utils.rolUsuario, (req, respuestaF) => {
                     let cpnXml = builder.buildObject(newJson);
                     cpnXml = xmlBeautifier(cpnXml);
                     let body = {
-                        complex_verify: true,
+                        complex_verify: false,
                         need_sim_restart: true,
                         xml: cpnXml,
                     };
