@@ -24,7 +24,7 @@ const comprobarDatos = function (req, res, next) {
 };
 
 const obtenerImagen = function(ruta,callback){
-    const bucket = storage.bucket("img-back");
+    const bucket = storage.bucket("eval-imgs");
     const file = bucket.file(ruta);
     file.download().then((data) => {
         callback(data[0]);
