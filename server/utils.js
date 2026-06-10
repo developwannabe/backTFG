@@ -34,7 +34,7 @@ const obtenerImagen = function(ruta,callback){
 }
 
 const guardarImagen = function(ruta,imagen,callback){
-    const bucket = storage.bucket("img-back");
+    const bucket = storage.bucket("eval-imgs");
     const file = bucket.file(ruta);
     file.save(imagen).then(() => {
         callback(true);
@@ -45,7 +45,7 @@ const guardarImagen = function(ruta,imagen,callback){
 }
 
 const existeImagen = function(ruta,callback){
-    const bucket = storage.bucket("img-back");
+    const bucket = storage.bucket("eval-imgs");
     const file = bucket.file(ruta);
     file.exists().then((data) => {
         callback(data[0]);
