@@ -13,6 +13,8 @@ const cookieSession = require("cookie-session");
 const utils = require("./server/utils.js");
 const FormData = require("form-data");
 const path = require("path");
+const { Logging }  = require('@google-cloud/logging');
+const monitoring   = require('@google-cloud/monitoring');
 
 const app = express();
 app.use(cors());
@@ -43,6 +45,8 @@ const GPT = process.env.GPT_URL;
 const GPT_TOKEN = process.env.GPT_TOKEN;
 const MAGNITUDE = process.env.MAGNITUDE;
 const MAPS = process.env.MAPS_URL;
+const PROJECT_ID  = process.env.PROJECT_ID;
+const ENDPOINT_ID = process.env.ENDPOINT_ID;
 
 function generateSessionId() {
     const id = "CPN_IDE_SESSION_" + new Date().getTime();
@@ -640,6 +644,115 @@ app.get(
         }
     }
 );
+
+app.get("/api/metrics", utils.rolAdmin, async (req, res) => {
+    try {
+        const logging = new Logging({ projectId: PROJECT_ID });
+        const hours   = parseInt(req.query.hours) || 24;
+        const since   = new Date(Date.now() - hours * 3600 * 1000).toISOString();
+
+        const [entries] = await logging.getEntries({
+            filter: `resource.type="aiplatform.googleapis.com/Endpoint" resource.labels.endpoint_id="${ENDPOINT_ID}" jsonPayload.message=~"event.*prediction" timestamp>="${since}"`,
+            orderBy: 'timestamp desc',
+            pageSize: 200,
+        });
+
+        const logs = [];
+        for (const entry of entries) {
+            const msg = entry.data?.message || '';
+            try {
+                const data = JSON.parse(msg.slice(msg.indexOf('{')));
+                if (data.event === 'prediction') {
+                    data.logged_at = entry.metadata.timestamp;
+                    logs.push(data);
+                }
+            } catch (_) {}
+        }
+
+        const total          = logs.length;
+        const transitable    = logs.filter(l => l.label === 'transitable').length;
+        const no_transitable = total - transitable;
+        const avg_confidence = total
+            ? Math.round((logs.reduce((s, l) => s + (l.confidence || 0), 0) / total) * 10000) / 10000
+            : 0;
+        const xai_requests = logs.filter(l => l.explain).length;
+
+        const by_hour = {};
+        for (const l of logs) {
+            const hour = (l.timestamp || '').slice(0, 13);
+            by_hour[hour] = (by_hour[hour] || 0) + 1;
+        }
+
+        res.json({
+            total, transitable, no_transitable,
+            avg_confidence, xai_requests,
+            by_hour: Object.fromEntries(Object.entries(by_hour).sort()),
+            recent:  logs.slice(0, 20),
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.get("/api/performance", utils.rolAdmin, async (req, res) => {
+    try {
+        const client  = new monitoring.MetricServiceClient();
+        const hours   = parseInt(req.query.hours) || 24;
+        const now     = Math.floor(Date.now() / 1000);
+        const start   = now - hours * 3600;
+
+        async function query(metricType) {
+            const [timeSeries] = await client.listTimeSeries({
+                name:     client.projectPath(PROJECT_ID),
+                filter:   `metric.type="${metricType}" AND resource.labels.endpoint_id="${ENDPOINT_ID}"`,
+                interval: {
+                    startTime: { seconds: start },
+                    endTime:   { seconds: now },
+                },
+                view: 'FULL',
+            });
+            return timeSeries.flatMap(s =>
+                s.points.map(p => ({
+                    time:  Number(p.interval.endTime.seconds),
+                    value: p.value.doubleValue || Number(p.value.int64Value) || 0,
+                }))
+            ).sort((a, b) => a.time - b.time);
+        }
+
+        const [latency, requests, errors, cpu, replicas] = await Promise.all([
+            query("aiplatform.googleapis.com/prediction/online/prediction_latencies"),
+            query("aiplatform.googleapis.com/prediction/online/prediction_count"),
+            query("aiplatform.googleapis.com/prediction/online/error_count"),
+            query("aiplatform.googleapis.com/prediction/online/cpu/utilization"),
+            query("aiplatform.googleapis.com/prediction/online/replicas"),
+        ]);
+
+        res.json({ latency, requests, errors, cpu, replicas });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.get("/api/torchserve_logs", utils.rolAdmin, async (req, res) => {
+    try {
+        const logging = new Logging({ projectId: PROJECT_ID });
+        const since   = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+
+        const [entries] = await logging.getEntries({
+            filter:   `resource.type="aiplatform.googleapis.com/Endpoint" resource.labels.endpoint_id="${ENDPOINT_ID}" timestamp>="${since}"`,
+            orderBy:  'timestamp desc',
+            pageSize: 100,
+        });
+
+        res.json(entries.map(e => ({
+            timestamp: e.metadata.timestamp,
+            severity:  e.metadata.severity,
+            message:   e.data?.message || String(e.data || ''),
+        })));
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
 
 app.listen(PORT, () => {
     console.log(`App está escuchando en el puerto ${PORT}`);
