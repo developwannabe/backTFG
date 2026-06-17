@@ -292,6 +292,30 @@ class Sistem {
         });
     };
 
+    insertarPeticionRuta = function (origen, destino) {
+        return new Promise((resolve, reject) => {
+            this.cad.insertarPeticionRuta({ origen: parseInt(origen), destino: parseInt(destino), calculada: 0 }, function (error, result) {
+                if (error) return reject(error);
+                resolve({ _id: result.insertedId });
+            });
+        });
+    };
+
+    esperarRuta = function (id, { intervalMs = 3000, timeoutMs = 300000 } = {}) {
+        return new Promise((resolve, reject) => {
+            const t0 = Date.now();
+            const poll = () => {
+                this.cad.buscarRuta(id, function (error, doc) {
+                    if (error) return reject(error);
+                    if (doc && doc.calculada === 1) return resolve(doc);
+                    if (Date.now() - t0 >= timeoutMs) return resolve(null);
+                    setTimeout(poll, intervalMs);
+                });
+            };
+            poll();
+        });
+    };
+
     buscarUsuarios = function (filtro, callback) {
         this.cad.buscarUsuarios(filtro, function (error, result) {
             if (error) {

@@ -76,6 +76,14 @@ class Cad {
         this.db.buscarUno("transiciones", {}, { sort: { time: -1 } }, callback);
     };
 
+    insertarPeticionRuta = function (datos, callback) {
+        this.db.insertar("rutas", datos, callback);
+    };
+
+    buscarRuta = function (id, callback) {
+        this.db.buscarUno("rutas", { _id: id }, {}, callback);
+    };
+
     buscarUsuarios = function (filtro, callback) {
         let input = filtro.input
             .replace(/a/gi, "[aá]")
@@ -111,6 +119,7 @@ class BBDD {
             this.colecciones["transiciones"] =
                 this.db.collection("transiciones");
             this.colecciones["lugares"] = this.db.collection("lugares");
+            this.colecciones["rutas"] = this.db.collection("rutas");
             callback();
         } catch (error) {
             console.error("Fallo al conectar con BBDD:", error);
