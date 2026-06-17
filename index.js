@@ -139,7 +139,7 @@ app.get("/ruta/:origen/:destino", utils.rolUsuario, async (req, respuestaF) => {
         const ruta = await sistema.esperarRuta(peticion._id);
 
         if (!ruta || !ruta.ruta) {
-            return respuestaF.status(404).send({ error: "No existe ruta disponible entre los nodos seleccionados" });
+            return respuestaF.send({ mapa: null });
         }
 
         const mapa = await axios.post(MAPS, { ruta: ruta.ruta }, {
@@ -150,7 +150,7 @@ app.get("/ruta/:origen/:destino", utils.rolUsuario, async (req, respuestaF) => {
 
     } catch (error) {
         console.error("Error en /ruta/:origen/:destino:", error.message);
-        respuestaF.status(500).send({ error: "Error interno al calcular la ruta" });
+        respuestaF.send({ mapa: null });
     }
 });
 
