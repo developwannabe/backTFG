@@ -15,6 +15,7 @@ const FormData = require("form-data");
 const path = require("path");
 const { Logging }  = require('@google-cloud/logging');
 const monitoring   = require('@google-cloud/monitoring');
+const { GoogleAuth } = require('google-auth-library');
 
 const app = express();
 app.use(cors());
@@ -45,8 +46,9 @@ const GPT = process.env.GPT_URL;
 const GPT_TOKEN = process.env.GPT_TOKEN;
 const MAGNITUDE = process.env.MAGNITUDE;
 const MAPS = process.env.MAPS_URL;
-const PROJECT_ID  = process.env.PROJECT_ID;
-const ENDPOINT_ID = process.env.ENDPOINT_ID;
+const PROJECT_ID     = process.env.PROJECT_ID;
+const ENDPOINT_ID    = process.env.ENDPOINT_ID;
+const MODEL_ENDPOINT = process.env.MODEL_ENDPOINT;
 
 function generateSessionId() {
     const id = "CPN_IDE_SESSION_" + new Date().getTime();
@@ -463,6 +465,34 @@ app.get(
         }
     }
 );
+
+app.get("/explain/:transicion", utils.rolEvaluador, async (req, res) => {
+    try {
+        const imgBuffer = await new Promise((resolve, reject) => {
+            utils.obtenerImagen("imgVias/" + req.params.transicion + ".jpg", (data) => {
+                data ? resolve(data) : reject(new Error("Imagen no encontrada"));
+            });
+        });
+
+        const b64 = imgBuffer.toString("base64");
+
+        const auth = new GoogleAuth({ scopes: ["https://www.googleapis.com/auth/cloud-platform"] });
+        const client = await auth.getClient();
+        const { token } = await client.getAccessToken();
+
+        const response = await axios.post(
+            `https://europe-west1-aiplatform.googleapis.com/v1/${MODEL_ENDPOINT}:predict`,
+            { instances: [{ image: b64, explain: true }] },
+            { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, timeout: 60000 }
+        );
+
+        const prediction = (response.data.predictions || [])[0] || {};
+        res.json(prediction);
+    } catch (e) {
+        console.error("Error en /explain/:transicion:", e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
 
 app.get("/api/metrics", utils.rolAdmin, async (req, res) => {
     try {
