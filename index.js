@@ -200,7 +200,7 @@ app.get("/fisTransiciones/:idSession", utils.rolEvaluador, async (req, res) => {
                     path: keys[i].slice(5),
                     flood: eval.evaluacion[keys[i]].flood,
                     objects: eval.evaluacion[keys[i]].objects,
-                    magnitude: eval.magnitude,
+                    magnitude: eval.magnitude / 10.0,
                 });
             }
             await axios
