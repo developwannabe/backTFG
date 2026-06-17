@@ -146,7 +146,8 @@ app.get("/ruta/:origen/:destino", utils.rolUsuario, async (req, respuestaF) => {
             headers: { Authorization: "Bearer " + GPT_TOKEN }
         });
 
-        respuestaF.send({ mapa: mapa.data, ruta: ruta.ruta, coste: ruta.coste });
+        const eta = ruta.tiempo_base != null ? Math.round(ruta.tiempo_base) : null;
+        respuestaF.send({ mapa: mapa.data, ruta: ruta.ruta, coste: ruta.coste, eta });
 
     } catch (error) {
         console.error("Error en /ruta/:origen/:destino:", error.message);
@@ -530,10 +531,18 @@ app.get("/api/performance", utils.rolAdmin, async (req, res) => {
                 view: 'FULL',
             });
             return timeSeries.flatMap(s =>
-                s.points.map(p => ({
-                    time:  Number(p.interval.endTime.seconds),
-                    value: p.value.doubleValue || Number(p.value.int64Value) || 0,
-                }))
+                s.points.map(p => {
+                    const v = p.value;
+                    let value = 0;
+                    if (v.distributionValue && v.distributionValue.count > 0) {
+                        value = v.distributionValue.mean;
+                    } else if (v.doubleValue != null && v.doubleValue !== 0) {
+                        value = v.doubleValue;
+                    } else if (v.int64Value != null) {
+                        value = Number(v.int64Value);
+                    }
+                    return { time: Number(p.interval.endTime.seconds), value };
+                })
             ).sort((a, b) => a.time - b.time);
         }
 
